@@ -14,6 +14,22 @@ use std::io::Read;
 use clap::{Parser, ArgEnum};
 
 const SPECIES_EN_RAW: &str = include_str!("../resources/text/other/en/species_en.txt");
+const TAMAGO_WAZA_TABLE: &str = include_str!("../TamagoWazaTable.json");
+const UG_POKEMON_DATA: &str = include_str!("../UgPokemonData.json");
+const UG_RAND_MARK: &str = include_str!("../UgRandMark.json");
+const UG_SPECIAL_POKEMON: &str = include_str!("../UgSpecialPokemon.json");
+const UG_ENCOUNT_02: &str = include_str!("../UgEncount_02.json");
+const UG_ENCOUNT_03: &str = include_str!("../UgEncount_03.json");
+const UG_ENCOUNT_04: &str = include_str!("../UgEncount_04.json");
+const UG_ENCOUNT_05: &str = include_str!("../UgEncount_05.json");
+const UG_ENCOUNT_06: &str = include_str!("../UgEncount_06.json");
+const UG_ENCOUNT_07: &str = include_str!("../UgEncount_07.json");
+const UG_ENCOUNT_08: &str = include_str!("../UgEncount_08.json");
+const UG_ENCOUNT_09: &str = include_str!("../UgEncount_09.json");
+const UG_ENCOUNT_10: &str = include_str!("../UgEncount_10.json");
+const UG_ENCOUNT_11: &str = include_str!("../UgEncount_11.json");
+const UG_ENCOUNT_12: &str = include_str!("../UgEncount_12.json");
+const UG_ENCOUNT_20: &str = include_str!("../UgEncount_20.json");
 
 lazy_static! {
     pub static ref SPECIES_EN: Vec<&'static str> = load_string_list(SPECIES_EN_RAW);
@@ -257,8 +273,10 @@ struct Cli {
     version: Version,
     #[clap(arg_enum)]
     room: RoomType,
-    #[clap(short, long, default_value = "6")]
+    #[clap(short = 'f', long, default_value = "6")]
     story_flag: u8,
+    #[clap(short = 's', long)]
+    shiny_only: bool,
     advances: u32,
     s0: String,
     s1: String,
@@ -312,10 +330,7 @@ fn main() {
     println!("s3: {:#08X}", s3);
     println!();
 
-    let mut f = File::open("UgSpecialPokemon.json").unwrap();
-    let mut special_pokemon_str = String::new();
-    f.read_to_string(&mut special_pokemon_str).unwrap();
-    let special_pokemon = serde_json::from_str::<UgSpecialPokemon>(&special_pokemon_str).unwrap();
+    let special_pokemon = serde_json::from_str::<UgSpecialPokemon>(UG_SPECIAL_POKEMON).unwrap();
 
     let special_pokemon = special_pokemon
         .sheet_sheet_1
@@ -336,20 +351,25 @@ fn main() {
         .map(|pr| pr.rate as f32)
         .sum::<f32>();
 
-    f = File::open("UgPokemonData.json").unwrap();
-    let mut ug_pokemon_data_str = String::new();
-    f.read_to_string(&mut ug_pokemon_data_str).unwrap();
-    let ug_pokemon_data = serde_json::from_str::<UgPokemonData>(&ug_pokemon_data_str).unwrap();
+    let ug_pokemon_data = serde_json::from_str::<UgPokemonData>(UG_POKEMON_DATA).unwrap();
 
-    f = File::open("UgRandMark.json").unwrap();
-    let mut ug_rand_mark_str = String::new();
-    f.read_to_string(&mut ug_rand_mark_str).unwrap();
-    let mut ug_rand_mark = serde_json::from_str::<UgRandMarkSheet>(&ug_rand_mark_str).unwrap();
+    let mut ug_rand_mark = serde_json::from_str::<UgRandMarkSheet>(UG_RAND_MARK).unwrap();
 
-    f = File::open(format!("{}.json", ug_rand_mark.table.iter().find(|t| t.id == cli.room as u8).unwrap().file_name)).unwrap();
-    let mut ug_encount_str = String::new();
-    f.read_to_string(&mut ug_encount_str).unwrap();
-    let mut ug_encount = serde_json::from_str::<UgEncountSheet>(&ug_encount_str).unwrap();
+    let ug_encount_str = match ug_rand_mark.table.iter().find(|t| t.id == cli.room as u8).unwrap().file_name.trim_start_matches("UgEncount_") {
+        "02" => UG_ENCOUNT_02,
+        "03" => UG_ENCOUNT_03,
+        "04" => UG_ENCOUNT_04,
+        "05" => UG_ENCOUNT_05,
+        "06" => UG_ENCOUNT_06,
+        "07" => UG_ENCOUNT_07,
+        "08" => UG_ENCOUNT_08,
+        "09" => UG_ENCOUNT_09,
+        "10" => UG_ENCOUNT_10,
+        "11" => UG_ENCOUNT_11,
+        "12" => UG_ENCOUNT_12,
+        _ => UG_ENCOUNT_20
+    };
+    let mut ug_encount = serde_json::from_str::<UgEncountSheet>(ug_encount_str).unwrap();
 
     let opposite_version = match cli.version {
         Version::BD => Version::SP,
@@ -438,16 +458,14 @@ fn main() {
         llmax -= 1;
     }
 
-    f = File::open("TamagoWazaTable.json").unwrap();
-    let mut egg_move_table_str = String::new();
-    f.read_to_string(&mut egg_move_table_str).unwrap();
-    let mut egg_move_table = serde_json::from_str::<TamagoWazaTable>(&egg_move_table_str).unwrap();
+    let mut egg_move_table = serde_json::from_str::<TamagoWazaTable>(TAMAGO_WAZA_TABLE).unwrap();
 
     let mut rng = XorShift::from_state([s0, s1, s2, s3]);
     let secret_base_used_tiles = 0;
     for advances in 0..=cli.advances {
+        let mut contains_shiny = false;
         let mut spawn_count = rand_mark_data.min;
-        println!("Advances: {}", advances);
+        let mut log = format!("Advances: {}\n", advances);
         let mut clone = rng.clone();
         let rare_check = clone.rand_range(0, 100);
         let mut rare_mons_no = 0;
@@ -566,7 +584,7 @@ fn main() {
                     .unwrap();
                 poke_rates.push(PokeRate {
                     monsno: pokemon_data.monsno,
-                    rate: pokemon_data.flag_rate[cli.story_flag as usize] as u16,
+                    rate: pokemon_data.flag_rate[cli.story_flag as usize - 1] as u16,
                 });
             }
 
@@ -583,7 +601,7 @@ fn main() {
                 }
                 slot_rand -= poke_rate.rate as f32
             }
-            println!("Species: {}", SPECIES_EN[species as usize]);
+            log = format!("{}Species: {}\n", log, SPECIES_EN[species as usize]);
             let gender_ratio = personal_table::BDSP
                 .get_form_entry(species as usize, 0)
                 .get_gender();
@@ -624,14 +642,14 @@ fn main() {
                 ^ curr_pid >> 0x10
                 ^ curr_pid & 0xFFF0)
                 < 0x10;
-            println!(
-                "PID: {curr_pid:08X} - Shiny Rand: {curr_shiny_rand:08X} Shiny: {}",
-                is_shiny
-            );
+            if is_shiny {
+                contains_shiny = true;
+            }
+            log = format!("{}PID: {curr_pid:08X} - Shiny Rand: {curr_shiny_rand:08X} Shiny: {}\n", log, is_shiny);
         }
 
         if rare_check < 50 {
-            println!("Rare Species: {}", SPECIES_EN[rare_mons_no as usize]);
+            log = format!("{}Rare Species: {}\n", log, SPECIES_EN[rare_mons_no as usize]);
             let gender_ratio = personal_table::BDSP
                 .get_form_entry(rare_mons_no as usize, 0)
                 .get_gender();
@@ -672,13 +690,16 @@ fn main() {
                 ^ curr_pid >> 0x10
                 ^ curr_pid & 0xFFF0)
                 < 0x10;
-            println!(
-                "PID: {curr_pid:08X} - Shiny Rand: {curr_shiny_rand:08X} Shiny: {}",
-                is_shiny
-            );
+            if is_shiny {
+                contains_shiny = true;
+            }
+            log = format!("{}PID: {curr_pid:08X} - Shiny Rand: {curr_shiny_rand:08X} Shiny: {}", log, is_shiny);
         }
 
-        println!();
+        if contains_shiny || !cli.shiny_only {
+            println!("{}", log);
+            println!();
+        }
         rng.next();
     }
 }
