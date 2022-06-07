@@ -566,7 +566,7 @@ fn main() {
                     .unwrap();
                 poke_rates.push(PokeRate {
                     monsno: pokemon_data.monsno,
-                    rate: pokemon_data.flag_rate[5] as u16,
+                    rate: pokemon_data.flag_rate[cli.story_flag as usize] as u16,
                 });
             }
 
