@@ -11,7 +11,7 @@ use resource_util::load_string_list;
 use serde::Deserialize;
 use std::fs::File;
 use std::io::Read;
-use clap::Parser;
+use clap::{Parser, ArgEnum};
 
 const SPECIES_EN_RAW: &str = include_str!("../resources/text/other/en/species_en.txt");
 
@@ -204,6 +204,8 @@ struct UgRandMarkSheet {
 #[derive(Deserialize, Clone)]
 struct UgRandMark {
     id: u8,
+    #[serde(rename = "FileName")]
+    file_name: String,
     size: u8,
     min: u8,
     max: u8,
@@ -251,11 +253,45 @@ struct TamagoWazaEntry {
 
 #[derive(Parser)]
 struct Cli {
+    #[clap(arg_enum)]
+    version: Version,
+    #[clap(arg_enum)]
+    room: RoomType,
+    #[clap(short, long, default_value = "6")]
+    story_flag: u8,
     advances: u32,
     s0: String,
     s1: String,
     s2: String,
     s3: String
+}
+
+#[derive(ArgEnum, PartialEq, Copy, Clone)]
+enum Version {
+    BD = 2,
+    SP
+}
+
+#[derive(ArgEnum, PartialEq, Copy, Clone)]
+enum RoomType {
+    SpaciousCave = 2,
+    GrasslandCave,
+    FountainspringCave,
+    RockyCave,
+    VolcanicCave,
+    SwampyCave,
+    DazzlingCave,
+    WhiteoutCave,
+    IcyCave,
+    RiverbankCave,
+    SandsearCave,
+    StillWaterCavern,
+    SunlitCavern,
+    BigBluffCavern,
+    StargleamCavern,
+    GlacialCavern,
+    BogsunkCavern,
+    TyphloCavern
 }
 
 fn main() {
@@ -284,14 +320,14 @@ fn main() {
     let special_pokemon = special_pokemon
         .sheet_sheet_1
         .into_iter()
-        .filter_map(|s| if s.id == 2 { Some(s) } else { None })
+        .filter_map(|s| if s.id == cli.room as u8 { Some(s) } else { None })
         .collect::<Vec<Sheet1>>();
 
     let mut special_pokemon_rates = special_pokemon
         .iter()
         .map(|s| PokeRate {
             monsno: s.monsno,
-            rate: s.p_special_rate,
+            rate: { if cli.version == Version::BD {s.d_special_rate} else { s.p_special_rate } },
         })
         .collect::<Vec<PokeRate>>();
     special_pokemon_rates.sort_by(|pr, pr2| pr2.rate.cmp(&pr.rate));
@@ -305,15 +341,25 @@ fn main() {
     f.read_to_string(&mut ug_pokemon_data_str).unwrap();
     let ug_pokemon_data = serde_json::from_str::<UgPokemonData>(&ug_pokemon_data_str).unwrap();
 
-    f = File::open("UgEncount_02.json").unwrap();
+    f = File::open("UgRandMark.json").unwrap();
+    let mut ug_rand_mark_str = String::new();
+    f.read_to_string(&mut ug_rand_mark_str).unwrap();
+    let mut ug_rand_mark = serde_json::from_str::<UgRandMarkSheet>(&ug_rand_mark_str).unwrap();
+
+    f = File::open(format!("{}.json", ug_rand_mark.table.iter().find(|t| t.id == cli.room as u8).unwrap().file_name)).unwrap();
     let mut ug_encount_str = String::new();
     f.read_to_string(&mut ug_encount_str).unwrap();
     let mut ug_encount = serde_json::from_str::<UgEncountSheet>(&ug_encount_str).unwrap();
 
+    let opposite_version = match cli.version {
+        Version::BD => Version::SP,
+        Version::SP => Version::BD
+    };
+
     let enabled_pokemon = ug_encount
         .table
         .into_iter()
-        .filter(|e| e.version != 2 && e.zukan_flag <= 6)
+        .filter(|e| e.version != opposite_version as u8 && e.zukan_flag <= cli.story_flag)
         .collect::<Vec<UgEncount>>();
 
     let mut mons_data_indexs = Vec::new();
@@ -343,12 +389,7 @@ fn main() {
         }
     }
 
-    f = File::open("UgRandMark.json").unwrap();
-    let mut ug_rand_mark_str = String::new();
-    f.read_to_string(&mut ug_rand_mark_str).unwrap();
-    let mut ug_rand_mark = serde_json::from_str::<UgRandMarkSheet>(&ug_rand_mark_str).unwrap();
-
-    let mut type_rates = ug_rand_mark.table[1]
+    let mut type_rates = ug_rand_mark.table.iter().find(|t| t.id == cli.room as u8).unwrap()
         .typerate
         .iter()
         .enumerate()
@@ -368,7 +409,7 @@ fn main() {
 
     let type_rates_sum = type_rates.iter().map(|tr| tr.rate).sum::<u16>();
 
-    let rand_mark_data = ug_rand_mark.table[1].clone();
+    let rand_mark_data = ug_rand_mark.table.iter().find(|t| t.id == cli.room as u8).unwrap().clone();
     let mut smax = rand_mark_data.smax;
     let mut mmax = rand_mark_data.mmax;
     let mut lmax = rand_mark_data.lmax;
@@ -405,7 +446,7 @@ fn main() {
     let mut rng = XorShift::from_state([s0, s1, s2, s3]);
     let secret_base_used_tiles = 0;
     for advances in 0..=cli.advances {
-        let mut spawn_count = 5;
+        let mut spawn_count = rand_mark_data.min;
         println!("Advances: {}", advances);
         let mut clone = rng.clone();
         let rare_check = clone.rand_range(0, 100);
@@ -423,14 +464,14 @@ fn main() {
 
         let min_max_rand = clone.rand_range(0, 100);
         if 50u32.saturating_sub(secret_base_used_tiles) <= min_max_rand {
-            spawn_count = 7;
+            spawn_count = rand_mark_data.max;
         }
 
         if rare_check < 50 {
             spawn_count -= 1;
         }
 
-        let mut poke_slots: Vec<TypeAndSize> = Vec::with_capacity(spawn_count);
+        let mut poke_slots: Vec<TypeAndSize> = Vec::with_capacity(spawn_count as usize);
 
         for _ in 0..spawn_count {
             let mut r#type = 0;
