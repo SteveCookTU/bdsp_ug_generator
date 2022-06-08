@@ -1,6 +1,9 @@
 #![allow(unused)]
 
-use bdsp_ug_generator::{run_results, Pokemon, RoomType, Version, ABILITIES_EN, GENDER_SYMBOLS, ITEMS_EN, MOVES_EN, NATURES_EN, SPECIES_EN, personal_table, Filter};
+use bdsp_ug_generator::{
+    personal_table, run_results, Filter, Pokemon, RoomType, Version, ABILITIES_EN, GENDER_SYMBOLS,
+    ITEMS_EN, MOVES_EN, NATURES_EN, SPECIES_EN,
+};
 use clap::Parser;
 use std::fmt::Write;
 
@@ -41,7 +44,7 @@ fn write_pokemon(pokemon: &Pokemon, string: &mut String) {
     let personal_info = personal_table::BDSP.get_form_entry(pokemon.species as usize, 0);
     let ability = match pokemon.ability {
         0 => personal_info.get_ability_1(),
-        _ => personal_info.get_ability_2()
+        _ => personal_info.get_ability_2(),
     };
     writeln!(string, "Species: {}\nPID: {:08X} EC: {:08X} Shiny: {}\nIVs: {:?} Ability: {} Gender: {}\nNature: {} Item: {}{}\n", SPECIES_EN[pokemon.species as usize], pokemon.pid, pokemon.ec, pokemon.shiny, pokemon.ivs, ABILITIES_EN[ability],  GENDER_SYMBOLS[pokemon.gender as usize], NATURES_EN[pokemon.nature as usize].trim(),
              ITEMS_EN[pokemon.item as usize].trim(),
@@ -77,7 +80,9 @@ fn main() {
 
     for (i, val) in min_split.take(6).enumerate() {
         if !val.is_empty() {
-            min_ivs[i] = val.parse::<u8>().expect(&format!("Failed to parse min iv {}", i));
+            min_ivs[i] = val
+                .parse::<u8>()
+                .expect(&format!("Failed to parse min iv {}", i));
         }
     }
 
@@ -85,7 +90,9 @@ fn main() {
 
     for (i, val) in max_split.take(6).enumerate() {
         if !val.is_empty() {
-            max_ivs[i] = val.parse::<u8>().expect(&format!("Failed to parse max iv {}", i));
+            max_ivs[i] = val
+                .parse::<u8>()
+                .expect(&format!("Failed to parse max iv {}", i));
         }
     }
 
@@ -98,7 +105,7 @@ fn main() {
         nature: cli.nature,
         item: cli.item,
         egg_move: cli.egg_move,
-        gender: cli.gender
+        gender: cli.gender,
     };
 
     let results = run_results(
@@ -110,16 +117,16 @@ fn main() {
         cli.version,
         cli.story_flag,
         cli.room,
-        filter
+        filter,
     );
 
     let mut print = String::new();
 
-    for (advance, result) in results.iter().enumerate() {
+    for result in results.iter() {
         writeln!(
             print,
             "-------------------------------------------\nAdvances: {}",
-            advance
+            result.advance
         )
         .unwrap();
         for pokemon in result.regular_pokemon.iter() {

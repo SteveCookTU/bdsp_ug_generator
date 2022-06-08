@@ -1,6 +1,15 @@
-use crate::{personal_table, PersonalInfo, PokeRate, RoomType, Sheet1, TamagoWazaIgnoreTable, TamagoWazaTable, TypeAndSize, TypeRate, UgEncount, UgEncountSheet, UgPokemonData, UgRandMarkSheet, UgSpecialPokemon, Version, XorShift, ABILITIES_EN, GENDER_SYMBOLS, ITEMS_EN, MOVES_EN, NATURES_EN, SPECIES_EN, TAMAGO_WAZA_IGNORE_TABLE, TAMAGO_WAZA_TABLE, UG_ENCOUNT_02, UG_ENCOUNT_03, UG_ENCOUNT_04, UG_ENCOUNT_05, UG_ENCOUNT_06, UG_ENCOUNT_07, UG_ENCOUNT_08, UG_ENCOUNT_09, UG_ENCOUNT_10, UG_ENCOUNT_11, UG_ENCOUNT_12, UG_ENCOUNT_20, UG_POKEMON_DATA, UG_RAND_MARK, UG_SPECIAL_POKEMON, Filter};
+use crate::{
+    personal_table, Filter, PersonalInfo, PokeRate, RoomType, Sheet1, TamagoWazaIgnoreTable,
+    TamagoWazaTable, TypeAndSize, TypeRate, UgEncount, UgEncountSheet, UgPokemonData,
+    UgRandMarkSheet, UgSpecialPokemon, Version, XorShift, ABILITIES_EN, GENDER_SYMBOLS, ITEMS_EN,
+    MOVES_EN, NATURES_EN, SPECIES_EN, TAMAGO_WAZA_IGNORE_TABLE, TAMAGO_WAZA_TABLE, UG_ENCOUNT_02,
+    UG_ENCOUNT_03, UG_ENCOUNT_04, UG_ENCOUNT_05, UG_ENCOUNT_06, UG_ENCOUNT_07, UG_ENCOUNT_08,
+    UG_ENCOUNT_09, UG_ENCOUNT_10, UG_ENCOUNT_11, UG_ENCOUNT_12, UG_ENCOUNT_20, UG_POKEMON_DATA,
+    UG_RAND_MARK, UG_SPECIAL_POKEMON,
+};
 
 pub struct Advance {
+    pub advance: u32,
     pub regular_pokemon: Vec<Pokemon>,
     pub rare_pokemon: Option<Pokemon>,
 }
@@ -27,7 +36,7 @@ pub fn run_results(
     version: Version,
     story_flag: u8,
     room: RoomType,
-    filter: Filter
+    filter: Filter,
 ) -> Vec<Advance> {
     let mut results = Vec::with_capacity(advances as usize);
 
@@ -187,7 +196,7 @@ pub fn run_results(
 
     let mut rng = XorShift::from_state([s0, s1, s2, s3]);
     let secret_base_used_tiles = 0;
-    for _ in 0..=advances {
+    for curr_advance in 0..=advances {
         let mut contains_shiny = false;
         let mut spawn_count = rand_mark_data.min;
         let mut clone = rng.clone();
@@ -217,6 +226,7 @@ pub fn run_results(
         let mut poke_slots: Vec<TypeAndSize> = Vec::with_capacity(spawn_count as usize);
 
         let mut advance = Advance {
+            advance: curr_advance,
             regular_pokemon: Vec::with_capacity(spawn_count as usize),
             rare_pokemon: None,
         };

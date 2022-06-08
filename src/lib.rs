@@ -1,3 +1,4 @@
+mod filter;
 mod flag_util;
 pub mod personal_info;
 pub mod personal_info_bdsp;
@@ -5,10 +6,9 @@ pub mod personal_table;
 mod resource_util;
 mod run_results;
 mod xorshift;
-mod filter;
 
-pub use run_results::*;
 pub use filter::*;
+pub use run_results::*;
 
 use crate::personal_info::PersonalInfo;
 use crate::xorshift::XorShift;
