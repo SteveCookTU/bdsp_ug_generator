@@ -8,6 +8,7 @@ mod run_results;
 mod xorshift;
 
 pub use run_print::run_print;
+pub use run_results::*;
 
 use crate::personal_info::PersonalInfo;
 use crate::xorshift::XorShift;
