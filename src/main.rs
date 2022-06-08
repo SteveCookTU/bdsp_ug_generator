@@ -6,6 +6,7 @@ use bdsp_ug_generator::{
 };
 use clap::Parser;
 use std::fmt::Write;
+use bdsp_ug_generator::xorshift::XorShift;
 
 #[derive(Parser)]
 struct Cli {
@@ -116,12 +117,11 @@ fn main() {
         gender: cli.gender,
     };
 
+    let rng = XorShift::from_state([s0, s1, s2, s3]);
+
     let results = run_results(
         cli.advances,
-        s0,
-        s1,
-        s2,
-        s3,
+        rng,
         cli.version,
         cli.story_flag,
         cli.room,

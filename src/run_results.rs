@@ -29,10 +29,7 @@ pub struct Pokemon {
 
 pub fn run_results(
     advances: u32,
-    s0: u32,
-    s1: u32,
-    s2: u32,
-    s3: u32,
+    mut rng: XorShift,
     version: Version,
     story_flag: u8,
     room: RoomType,
@@ -194,7 +191,6 @@ pub fn run_results(
     let mut egg_move_ignore_table =
         serde_json::from_str::<TamagoWazaIgnoreTable>(TAMAGO_WAZA_IGNORE_TABLE).unwrap();
 
-    let mut rng = XorShift::from_state([s0, s1, s2, s3]);
     let secret_base_used_tiles = 0;
     for curr_advance in 0..=advances {
         let mut contains_shiny = false;

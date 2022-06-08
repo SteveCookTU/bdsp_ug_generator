@@ -5,7 +5,7 @@ pub mod personal_info_bdsp;
 pub mod personal_table;
 mod resource_util;
 mod run_results;
-mod xorshift;
+pub mod xorshift;
 
 pub use filter::*;
 pub use run_results::*;

@@ -1,6 +1,6 @@
 #[derive(Copy, Clone)]
 pub struct XorShift {
-    state: [u32; 4],
+    pub state: [u32; 4],
 }
 
 impl XorShift {
