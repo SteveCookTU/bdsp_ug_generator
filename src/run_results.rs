@@ -438,12 +438,6 @@ pub fn run_results(
         }
 
         if rare_check < 50 {
-            writeln!(
-                log,
-                "Rare Species: {}",
-                SPECIES_EN[rare_mons_no as usize].trim()
-            )
-            .unwrap();
             let personal_info = personal_table::BDSP.get_form_entry(rare_mons_no as usize, 0);
 
             let gender_ratio = personal_info.get_gender();
@@ -526,7 +520,7 @@ pub fn run_results(
             }
 
             advance.rare_pokemon = Some(Pokemon {
-                species,
+                species: rare_mons_no,
                 ec,
                 pid: curr_pid,
                 shiny: is_shiny,
