@@ -9,21 +9,21 @@ use crate::{
 };
 
 pub struct Advance {
-    regular_pokemon: Vec<Pokemon>,
-    rare_pokemon: Option<Pokemon>,
+    pub regular_pokemon: Vec<Pokemon>,
+    pub rare_pokemon: Option<Pokemon>,
 }
 
 pub struct Pokemon {
-    species: u16,
-    ec: u32,
-    pid: u32,
-    shiny: bool,
-    ivs: [u8; 6],
-    ability: u16,
-    gender: u8,
-    nature: u8,
-    item: u16,
-    egg_move: Option<u16>,
+    pub species: u16,
+    pub ec: u32,
+    pub pid: u32,
+    pub shiny: bool,
+    pub ivs: [u8; 6],
+    pub ability: u16,
+    pub gender: u8,
+    pub nature: u8,
+    pub item: u16,
+    pub egg_move: Option<u16>,
 }
 
 pub fn run_print(
