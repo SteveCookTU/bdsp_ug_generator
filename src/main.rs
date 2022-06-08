@@ -1,12 +1,12 @@
 #![allow(unused)]
 
+use bdsp_ug_generator::xorshift::XorShift;
 use bdsp_ug_generator::{
     personal_table, run_results, Filter, Pokemon, RoomType, Version, ABILITIES_EN, GENDER_SYMBOLS,
     ITEMS_EN, MOVES_EN, NATURES_EN, SPECIES_EN,
 };
 use clap::Parser;
 use std::fmt::Write;
-use bdsp_ug_generator::xorshift::XorShift;
 
 #[derive(Parser)]
 struct Cli {
