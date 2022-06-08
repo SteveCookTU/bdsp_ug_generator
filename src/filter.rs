@@ -7,7 +7,7 @@ pub struct Filter {
     pub min_ivs: [u8; 6],
     pub max_ivs: [u8; 6],
     pub ability: Option<u8>,
-    pub nature: Option<u8>,
+    pub nature: Option<Vec<u8>>,
     pub item: Option<u16>,
     pub egg_move: Option<u16>,
     pub gender: Option<u8>,
@@ -39,7 +39,7 @@ impl Filter {
         self
     }
 
-    pub fn nature(mut self, nature: u8) -> Filter {
+    pub fn nature(mut self, nature: Vec<u8>) -> Filter {
         self.nature = Some(nature);
         self
     }
@@ -104,8 +104,8 @@ impl Filter {
             }
         }
 
-        if let Some(nature) = self.nature {
-            if pokemon.nature != nature {
+        if let Some(nature) = &self.nature {
+            if !nature.contains(&pokemon.nature) {
                 return false;
             }
         }

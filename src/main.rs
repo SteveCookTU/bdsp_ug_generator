@@ -32,8 +32,8 @@ struct Cli {
     max_ivs: String,
     #[clap(long, help = "Input pokemon species number")]
     species: Option<u16>,
-    #[clap(long, help = "Input nature ID number")]
-    nature: Option<u8>,
+    #[clap(long, help = "Input is a comma separated list of nature IDs")]
+    nature: Option<String>,
     #[clap(long, help = "Input is 0 or 1 for ability 1 and 2")]
     ability: Option<u8>,
     #[clap(long, help = "Input is a item ID number")]
@@ -105,13 +105,30 @@ fn main() {
         }
     }
 
+    let nature = if let Some(nature_list_str) = cli.nature {
+        Some(
+            nature_list_str
+                .split(',')
+                .filter_map(|i| {
+                    if i.is_empty() {
+                        None
+                    } else {
+                        Some(i.parse::<u8>().expect("Failed to parse nature to u8"))
+                    }
+                })
+                .collect::<Vec<u8>>(),
+        )
+    } else {
+        None
+    };
+
     let filter = Filter {
         shiny: cli.shiny_only,
         species: cli.species,
         min_ivs,
         max_ivs,
         ability: cli.ability,
-        nature: cli.nature,
+        nature,
         item: cli.item,
         egg_move: cli.egg_move,
         gender: cli.gender,
