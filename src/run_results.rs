@@ -26,7 +26,7 @@ pub struct Pokemon {
     pub egg_move: Option<u16>,
 }
 
-pub fn run_print(
+pub fn run_results(
     advances: u32,
     s0: u32,
     s1: u32,
