@@ -14,7 +14,12 @@ use std::io::Read;
 use clap::{Parser, ArgEnum};
 
 const SPECIES_EN_RAW: &str = include_str!("../resources/text/other/en/species_en.txt");
+const ABILITIES_EN_RAW: &str = include_str!("../resources/text/other/en/abilities_en.txt");
+const NATURES_EN_RAW: &str = include_str!("../resources/text/other/en/natures_en.txt");
+const MOVES_EN_RAW: &str = include_str!("../resources/text/other/en/moves_en.txt");
+const ITEMS_EN_RAW: &str = include_str!("../resources/text/items/items_en.txt");
 const TAMAGO_WAZA_TABLE: &str = include_str!("../TamagoWazaTable.json");
+const TAMAGO_WAZA_IGNORE_TABLE: &str = include_str!("../UgTamagoWazaIgnoreTable.json");
 const UG_POKEMON_DATA: &str = include_str!("../UgPokemonData.json");
 const UG_RAND_MARK: &str = include_str!("../UgRandMark.json");
 const UG_SPECIAL_POKEMON: &str = include_str!("../UgSpecialPokemon.json");
@@ -30,9 +35,14 @@ const UG_ENCOUNT_10: &str = include_str!("../UgEncount_10.json");
 const UG_ENCOUNT_11: &str = include_str!("../UgEncount_11.json");
 const UG_ENCOUNT_12: &str = include_str!("../UgEncount_12.json");
 const UG_ENCOUNT_20: &str = include_str!("../UgEncount_20.json");
+pub const GENDER_SYMBOLS: [char; 3] = ['♂', '♀', '-'];
 
 lazy_static! {
     pub static ref SPECIES_EN: Vec<&'static str> = load_string_list(SPECIES_EN_RAW);
+    pub static ref ABILITIES_EN: Vec<&'static str> = load_string_list(ABILITIES_EN_RAW);
+    pub static ref NATURES_EN: Vec<&'static str> = load_string_list(NATURES_EN_RAW);
+    pub static ref MOVES_EN: Vec<&'static str> = load_string_list(MOVES_EN_RAW);
+    pub static ref ITEMS_EN: Vec<&'static str> = load_string_list(ITEMS_EN_RAW);
 }
 
 #[derive(Copy, Clone)]
@@ -267,6 +277,20 @@ struct TamagoWazaEntry {
     waza_no: Vec<u16>,
 }
 
+#[derive(Deserialize)]
+struct TamagoWazaIgnoreTable {
+    #[serde(rename = "Sheet1")]
+    sheet_1: Vec<TamagoWazaIgnoreEntry>
+}
+
+#[derive(Deserialize)]
+struct TamagoWazaIgnoreEntry {
+    #[serde(rename = "MonsNo")]
+    monsno: u16,
+    #[serde(rename = "Waza")]
+    waza: Vec<u16>
+}
+
 #[derive(Parser)]
 struct Cli {
     #[clap(arg_enum)]
@@ -459,13 +483,14 @@ fn main() {
     }
 
     let mut egg_move_table = serde_json::from_str::<TamagoWazaTable>(TAMAGO_WAZA_TABLE).unwrap();
+    let mut egg_move_ignore_table = serde_json::from_str::<TamagoWazaIgnoreTable>(TAMAGO_WAZA_IGNORE_TABLE).unwrap();
 
     let mut rng = XorShift::from_state([s0, s1, s2, s3]);
     let secret_base_used_tiles = 0;
     for advances in 0..=cli.advances {
         let mut contains_shiny = false;
         let mut spawn_count = rand_mark_data.min;
-        let mut log = format!("Advances: {}\n", advances);
+        let mut log = format!("------------------------------\nAdvances: {}\n", advances);
         let mut clone = rng.clone();
         let rare_check = clone.rand_range(0, 100);
         let mut rare_mons_no = 0;
@@ -602,41 +627,17 @@ fn main() {
                 slot_rand -= poke_rate.rate as f32
             }
             log = format!("{}Species: {}\n", log, SPECIES_EN[species as usize]);
-            let gender_ratio = personal_table::BDSP
-                .get_form_entry(species as usize, 0)
-                .get_gender();
+
+            let personal_info = personal_table::BDSP.get_form_entry(species as usize, 0);
+
+            let gender_ratio = personal_info.get_gender();
+
             clone.next(); //level
-            clone.next(); //EC
+
+            let ec = clone.next(); //EC
             let curr_shiny_rand = clone.next(); //Shiny Rand
             let curr_pid = clone.next(); //PID Called twice if diglett is on!
-            clone.next(); //IV 1
-            clone.next(); //IV 2
-            clone.next(); //IV 3
-            clone.next(); //IV 4
-            clone.next(); //IV 5
-            clone.next(); //IV 6
-            clone.next(); //ability
-            if gender_ratio != 255 && gender_ratio != 254 && gender_ratio != 0 {
-                clone.next(); //gender
-            }
-            clone.next(); //nature
-            clone.next(); //height 1
-            clone.next(); //height 2
-            clone.next(); //weight 1
-            clone.next(); //weight 2
-            clone.next(); //item
-            let hatch_species = personal_table::BDSP
-                .get_form_entry(species as usize, 0)
-                .get_hatch_species();
-            if let Some(entry) = egg_move_table
-                .data
-                .iter()
-                .find(|e| e.no == hatch_species as u16)
-            {
-                if !entry.waza_no.is_empty() {
-                    clone.next(); //egg move
-                }
-            }
+
             let is_shiny = (curr_shiny_rand & 0xFFF0
                 ^ curr_shiny_rand >> 0x10
                 ^ curr_pid >> 0x10
@@ -645,46 +646,84 @@ fn main() {
             if is_shiny {
                 contains_shiny = true;
             }
-            log = format!("{}PID: {curr_pid:08X} - Shiny Rand: {curr_shiny_rand:08X} Shiny: {}\n", log, is_shiny);
+
+            log = format!("{}PID: {curr_pid:08X} EC: {ec:08X} Shiny: {}\n", log, is_shiny);
+
+            let mut ivs = [0; 6];
+
+            ivs[0] = clone.next() % 32; //IV 1
+            ivs[1] = clone.next() % 32; //IV 2
+            ivs[2] = clone.next() % 32; //IV 3
+            ivs[3] = clone.next() % 32; //IV 4
+            ivs[4] = clone.next() % 32; //IV 5
+            ivs[5] = clone.next() % 32; //IV 6
+            let ability_rand = clone.next() % 2;
+            let ability = match ability_rand { //ability
+                0 => personal_info.get_ability_1(),
+                1 => personal_info.get_ability_2(),
+                _ => 0,
+            };
+            let gender = if gender_ratio != 255 && gender_ratio != 254 && gender_ratio != 0 {
+                let gender_rand = clone.next() % 253;
+                ((gender_rand as usize) + 1 < gender_ratio) as usize
+            } else {
+                gender_ratio % 253
+            };
+
+            log = format!("{}IVs: {:?} Ability: {} Gender: {}\n", log, ivs, ABILITIES_EN[ability], GENDER_SYMBOLS[gender as usize]);
+
+            let nature = clone.next() % 25; //nature
+            clone.next(); //height 1
+            clone.next(); //height 2
+            clone.next(); //weight 1
+            clone.next(); //weight 2
+
+            let item_rand = clone.rand_range(0, 100); //item
+            let item = if item_rand < 60 {
+                personal_info.get_item_1()
+            } else if item_rand < 80 {
+                personal_info.get_item_2()
+            } else {
+                personal_info.get_item_3()
+            };
+
+            let hatch_species = personal_info
+                .get_hatch_species();
+
+            let mut egg_move_no = None;
+
+            if let Some(entry) = egg_move_table
+                .data
+                .iter()
+                .find(|e| e.no == hatch_species as u16)
+            {
+                let mut egg_move_table = entry.waza_no.clone();
+                if let Some(ignore_entry) = egg_move_ignore_table.sheet_1.iter().find(|e| e.monsno == entry.no) {
+                    let egg_move_ignore_table = ignore_entry.waza.clone();
+                    egg_move_table = egg_move_table.into_iter().filter(|i| !egg_move_ignore_table.contains(i) || *i == 0).collect::<Vec<u16>>(); // i == 0 check just in case
+                }
+                if !egg_move_table.is_empty() {
+                    let egg_move_rand = clone.rand_range(0, egg_move_table.len() as u32) as usize;
+                    egg_move_no = Some(egg_move_table[egg_move_rand]);
+                }
+            }
+
+            log = format!("{}Nature: {} Item: {}{}\n\n", log, NATURES_EN[nature as usize].trim(), ITEMS_EN[item].trim(), if let Some(no) = egg_move_no { format!(" Egg Move: {}", MOVES_EN[no as usize].trim()) } else {"".to_string()});
+
         }
 
         if rare_check < 50 {
-            log = format!("{}Rare Species: {}\n", log, SPECIES_EN[rare_mons_no as usize]);
-            let gender_ratio = personal_table::BDSP
-                .get_form_entry(rare_mons_no as usize, 0)
-                .get_gender();
+            log = format!("{}Rare Species: {}\n", log, SPECIES_EN[rare_mons_no as usize].trim());
+            let personal_info = personal_table::BDSP.get_form_entry(rare_mons_no as usize, 0);
+
+            let gender_ratio = personal_info.get_gender();
+
             clone.next(); //level
-            clone.next(); //EC
+
+            let ec = clone.next(); //EC
             let curr_shiny_rand = clone.next(); //Shiny Rand
             let curr_pid = clone.next(); //PID Called twice if diglett is on!
-            clone.next(); //IV 1
-            clone.next(); //IV 2
-            clone.next(); //IV 3
-            clone.next(); //IV 4
-            clone.next(); //IV 5
-            clone.next(); //IV 6
-            clone.next(); //ability
-            if gender_ratio != 255 && gender_ratio != 254 && gender_ratio != 0 {
-                clone.next(); //gender
-            }
-            clone.next(); //nature
-            clone.next(); //height 1
-            clone.next(); //height 2
-            clone.next(); //weight 1
-            clone.next(); //weight 2
-            clone.next(); //item
-            let hatch_species = personal_table::BDSP
-                .get_form_entry(rare_mons_no as usize, 0)
-                .get_hatch_species();
-            if let Some(entry) = egg_move_table
-                .data
-                .iter()
-                .find(|e| e.no == hatch_species as u16)
-            {
-                if !entry.waza_no.is_empty() {
-                    clone.next(); //egg move
-                }
-            }
+
             let is_shiny = (curr_shiny_rand & 0xFFF0
                 ^ curr_shiny_rand >> 0x10
                 ^ curr_pid >> 0x10
@@ -693,12 +732,71 @@ fn main() {
             if is_shiny {
                 contains_shiny = true;
             }
-            log = format!("{}PID: {curr_pid:08X} - Shiny Rand: {curr_shiny_rand:08X} Shiny: {}", log, is_shiny);
+
+            log = format!("{}PID: {curr_pid:08X} EC: {ec:08X} Shiny: {}\n", log, is_shiny);
+
+            let mut ivs = [0; 6];
+
+            ivs[0] = clone.next() % 32; //IV 1
+            ivs[1] = clone.next() % 32; //IV 2
+            ivs[2] = clone.next() % 32; //IV 3
+            ivs[3] = clone.next() % 32; //IV 4
+            ivs[4] = clone.next() % 32; //IV 5
+            ivs[5] = clone.next() % 32; //IV 6
+            let ability_rand = clone.next() % 2;
+            let ability = match ability_rand { //ability
+                0 => personal_info.get_ability_1(),
+                1 => personal_info.get_ability_2(),
+                _ => 0,
+            };
+            let gender = if gender_ratio != 255 && gender_ratio != 254 && gender_ratio != 0 {
+                let gender_rand = clone.next() % 253;
+                ((gender_rand as usize) + 1 < gender_ratio) as usize
+            } else {
+                gender_ratio % 253
+            };
+
+            log = format!("{}IVs: {:?} Ability: {} Gender: {}\n", log, ivs, ABILITIES_EN[ability].trim(), GENDER_SYMBOLS[gender as usize]);
+
+            let nature = clone.next() % 25; //nature
+            clone.next(); //height 1
+            clone.next(); //height 2
+            clone.next(); //weight 1
+            clone.next(); //weight 2
+            let item_rand = clone.rand_range(0, 100); //item
+            let item = if item_rand < 60 {
+                personal_info.get_item_1()
+            } else if item_rand < 80 {
+                personal_info.get_item_2()
+            } else {
+                personal_info.get_item_3()
+            };
+            let hatch_species = personal_info
+                .get_hatch_species();
+
+            let mut egg_move_no = None;
+
+            if let Some(entry) = egg_move_table
+                .data
+                .iter()
+                .find(|e| e.no == hatch_species as u16)
+            {
+                let mut egg_move_table = entry.waza_no.clone();
+                if let Some(ignore_entry) = egg_move_ignore_table.sheet_1.iter().find(|e| e.monsno == entry.no) {
+                    let egg_move_ignore_table = ignore_entry.waza.clone();
+                    egg_move_table = egg_move_table.into_iter().filter(|i| !egg_move_ignore_table.contains(i) || *i == 0).collect::<Vec<u16>>(); // i == 0 check just in case
+                }
+                if !egg_move_table.is_empty() {
+                    let egg_move_rand = clone.rand_range(0, egg_move_table.len() as u32) as usize;
+                    egg_move_no = Some(egg_move_table[egg_move_rand]);
+                }
+            }
+
+            log = format!("{}Nature: {} Item: {}{}\n\n", log, NATURES_EN[nature as usize].trim(), ITEMS_EN[item].trim(), if let Some(no) = egg_move_no { format!(" Egg Move: {}", MOVES_EN[no as usize].trim()) } else {"".to_string()});
         }
 
         if contains_shiny || !cli.shiny_only {
-            println!("{}", log);
-            println!();
+            print!("{}", log);
         }
         rng.next();
     }
