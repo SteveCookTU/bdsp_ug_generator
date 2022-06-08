@@ -198,7 +198,7 @@ pub enum RoomType {
     TyphloCavern
 }
 
-pub fn run(advances: u32, s0: u32, s1: u32, s2: u32, s3: u32, version: Version, story_flag: u8, room: RoomType, shiny_only: bool) {
+pub fn run_print(advances: u32, s0: u32, s1: u32, s2: u32, s3: u32, version: Version, story_flag: u8, room: RoomType, shiny_only: bool) {
     let special_pokemon = serde_json::from_str::<UgSpecialPokemon>(UG_SPECIAL_POKEMON).unwrap();
 
     let special_pokemon = special_pokemon
@@ -338,6 +338,7 @@ pub fn run(advances: u32, s0: u32, s1: u32, s2: u32, s3: u32, version: Version, 
         let mut spawn_count = rand_mark_data.min;
         let mut log = format!("------------------------------\nAdvances: {}\n", advances);
         let mut clone = rng.clone();
+
         let rare_check = clone.rand_range(0, 100);
         let mut rare_mons_no = 0;
         if rare_check < 50 {
