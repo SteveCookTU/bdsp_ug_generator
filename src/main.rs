@@ -17,21 +17,29 @@ struct Cli {
     story_flag: u8,
     #[clap(short = 's', long)]
     shiny_only: bool,
-    #[clap(long, default_value = "0/0/0/0/0/0")]
+    #[clap(
+        long,
+        default_value = "0/0/0/0/0/0",
+        help = "Input format is x/x/x/x/x/x. Values can be elided for the default of 0. Ex 31//31/31/31/31"
+    )]
     min_ivs: String,
-    #[clap(long, default_value = "31/31/31/31/31/31")]
+    #[clap(
+        long,
+        default_value = "31/31/31/31/31/31",
+        help = "Input format is x/x/x/x/x/x. Values can be elided for the default of 31. Ex /0////"
+    )]
     max_ivs: String,
-    #[clap(long)]
+    #[clap(long, help = "Input pokemon species number")]
     species: Option<u16>,
-    #[clap(long)]
+    #[clap(long, help = "Input nature ID number")]
     nature: Option<u8>,
-    #[clap(long)]
+    #[clap(long, help = "Input is 0 or 1 for ability 1 and 2")]
     ability: Option<u8>,
-    #[clap(long)]
+    #[clap(long, help = "Input is a item ID number")]
     item: Option<u16>,
-    #[clap(long)]
+    #[clap(long, help = "Input is a move ID number")]
     egg_move: Option<u16>,
-    #[clap(long)]
+    #[clap(long, help = "Options are 0, 1, 2 for male, female, genderless")]
     gender: Option<u8>,
     advances: u32,
     s0: String,
