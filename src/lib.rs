@@ -5,12 +5,12 @@ mod personal_table;
 mod resource_util;
 mod xorshift;
 
-use serde::Deserialize;
-use lazy_static::lazy_static;
-use resource_util::load_string_list;
-use clap::ArgEnum;
 use crate::personal_info::PersonalInfo;
 use crate::xorshift::XorShift;
+use clap::ArgEnum;
+use lazy_static::lazy_static;
+use resource_util::load_string_list;
+use serde::Deserialize;
 use std::fmt::Write;
 
 const SPECIES_EN_RAW: &str = include_str!("../resources/text/other/en/species_en.txt");
@@ -159,7 +159,7 @@ struct TamagoWazaEntry {
 #[derive(Deserialize)]
 struct TamagoWazaIgnoreTable {
     #[serde(rename = "Sheet1")]
-    sheet_1: Vec<TamagoWazaIgnoreEntry>
+    sheet_1: Vec<TamagoWazaIgnoreEntry>,
 }
 
 #[derive(Deserialize)]
@@ -167,13 +167,13 @@ struct TamagoWazaIgnoreEntry {
     #[serde(rename = "MonsNo")]
     monsno: u16,
     #[serde(rename = "Waza")]
-    waza: Vec<u16>
+    waza: Vec<u16>,
 }
 
 #[derive(ArgEnum, PartialEq, Copy, Clone)]
 pub enum Version {
     BD = 2,
-    SP
+    SP,
 }
 
 #[derive(ArgEnum, PartialEq, Copy, Clone)]
@@ -195,10 +195,20 @@ pub enum RoomType {
     StargleamCavern,
     GlacialCavern,
     BogsunkCavern,
-    TyphloCavern
+    TyphloCavern,
 }
 
-pub fn run_print(advances: u32, s0: u32, s1: u32, s2: u32, s3: u32, version: Version, story_flag: u8, room: RoomType, shiny_only: bool) {
+pub fn run_print(
+    advances: u32,
+    s0: u32,
+    s1: u32,
+    s2: u32,
+    s3: u32,
+    version: Version,
+    story_flag: u8,
+    room: RoomType,
+    shiny_only: bool,
+) {
     let special_pokemon = serde_json::from_str::<UgSpecialPokemon>(UG_SPECIAL_POKEMON).unwrap();
 
     let special_pokemon = special_pokemon
@@ -211,7 +221,13 @@ pub fn run_print(advances: u32, s0: u32, s1: u32, s2: u32, s3: u32, version: Ver
         .iter()
         .map(|s| PokeRate {
             monsno: s.monsno,
-            rate: { if version == Version::BD {s.d_special_rate} else { s.p_special_rate } },
+            rate: {
+                if version == Version::BD {
+                    s.d_special_rate
+                } else {
+                    s.p_special_rate
+                }
+            },
         })
         .collect::<Vec<PokeRate>>();
     special_pokemon_rates.sort_by(|pr, pr2| pr2.rate.cmp(&pr.rate));
@@ -224,7 +240,14 @@ pub fn run_print(advances: u32, s0: u32, s1: u32, s2: u32, s3: u32, version: Ver
 
     let mut ug_rand_mark = serde_json::from_str::<UgRandMarkSheet>(UG_RAND_MARK).unwrap();
 
-    let ug_encount_str = match ug_rand_mark.table.iter().find(|t| t.id == room as u8).unwrap().file_name.trim_start_matches("UgEncount_") {
+    let ug_encount_str = match ug_rand_mark
+        .table
+        .iter()
+        .find(|t| t.id == room as u8)
+        .unwrap()
+        .file_name
+        .trim_start_matches("UgEncount_")
+    {
         "02" => UG_ENCOUNT_02,
         "03" => UG_ENCOUNT_03,
         "04" => UG_ENCOUNT_04,
@@ -236,13 +259,13 @@ pub fn run_print(advances: u32, s0: u32, s1: u32, s2: u32, s3: u32, version: Ver
         "10" => UG_ENCOUNT_10,
         "11" => UG_ENCOUNT_11,
         "12" => UG_ENCOUNT_12,
-        _ => UG_ENCOUNT_20
+        _ => UG_ENCOUNT_20,
     };
     let mut ug_encount = serde_json::from_str::<UgEncountSheet>(ug_encount_str).unwrap();
 
     let opposite_version = match version {
         Version::BD => Version::SP,
-        Version::SP => Version::BD
+        Version::SP => Version::BD,
     };
 
     let enabled_pokemon = ug_encount
@@ -278,7 +301,11 @@ pub fn run_print(advances: u32, s0: u32, s1: u32, s2: u32, s3: u32, version: Ver
         }
     }
 
-    let mut type_rates = ug_rand_mark.table.iter().find(|t| t.id == room as u8).unwrap()
+    let mut type_rates = ug_rand_mark
+        .table
+        .iter()
+        .find(|t| t.id == room as u8)
+        .unwrap()
         .typerate
         .iter()
         .enumerate()
@@ -298,7 +325,12 @@ pub fn run_print(advances: u32, s0: u32, s1: u32, s2: u32, s3: u32, version: Ver
 
     let type_rates_sum = type_rates.iter().map(|tr| tr.rate).sum::<u16>();
 
-    let rand_mark_data = ug_rand_mark.table.iter().find(|t| t.id == room as u8).unwrap().clone();
+    let rand_mark_data = ug_rand_mark
+        .table
+        .iter()
+        .find(|t| t.id == room as u8)
+        .unwrap()
+        .clone();
     let mut smax = rand_mark_data.smax;
     let mut mmax = rand_mark_data.mmax;
     let mut lmax = rand_mark_data.lmax;
@@ -328,7 +360,8 @@ pub fn run_print(advances: u32, s0: u32, s1: u32, s2: u32, s3: u32, version: Ver
     }
 
     let mut egg_move_table = serde_json::from_str::<TamagoWazaTable>(TAMAGO_WAZA_TABLE).unwrap();
-    let mut egg_move_ignore_table = serde_json::from_str::<TamagoWazaIgnoreTable>(TAMAGO_WAZA_IGNORE_TABLE).unwrap();
+    let mut egg_move_ignore_table =
+        serde_json::from_str::<TamagoWazaIgnoreTable>(TAMAGO_WAZA_IGNORE_TABLE).unwrap();
 
     let mut rng = XorShift::from_state([s0, s1, s2, s3]);
     let secret_base_used_tiles = 0;
@@ -505,7 +538,8 @@ pub fn run_print(advances: u32, s0: u32, s1: u32, s2: u32, s3: u32, version: Ver
             ivs[4] = clone.next() % 32; //IV 5
             ivs[5] = clone.next() % 32; //IV 6
             let ability_rand = clone.next() % 2;
-            let ability = match ability_rand { //ability
+            let ability = match ability_rand {
+                //ability
                 0 => personal_info.get_ability_1(),
                 1 => personal_info.get_ability_2(),
                 _ => 0,
@@ -517,7 +551,12 @@ pub fn run_print(advances: u32, s0: u32, s1: u32, s2: u32, s3: u32, version: Ver
                 gender_ratio % 253
             };
 
-            writeln!(log, "IVs: {:?} Ability: {} Gender: {}", ivs, ABILITIES_EN[ability], GENDER_SYMBOLS[gender as usize]).unwrap();
+            writeln!(
+                log,
+                "IVs: {:?} Ability: {} Gender: {}",
+                ivs, ABILITIES_EN[ability], GENDER_SYMBOLS[gender as usize]
+            )
+            .unwrap();
 
             let nature = clone.next() % 25; //nature
             clone.next(); //height 1
@@ -534,8 +573,7 @@ pub fn run_print(advances: u32, s0: u32, s1: u32, s2: u32, s3: u32, version: Ver
                 personal_info.get_item_3()
             };
 
-            let hatch_species = personal_info
-                .get_hatch_species();
+            let hatch_species = personal_info.get_hatch_species();
 
             let mut egg_move_no = None;
 
@@ -545,9 +583,16 @@ pub fn run_print(advances: u32, s0: u32, s1: u32, s2: u32, s3: u32, version: Ver
                 .find(|e| e.no == hatch_species as u16)
             {
                 let mut egg_move_table = entry.waza_no.clone();
-                if let Some(ignore_entry) = egg_move_ignore_table.sheet_1.iter().find(|e| e.monsno == entry.no) {
+                if let Some(ignore_entry) = egg_move_ignore_table
+                    .sheet_1
+                    .iter()
+                    .find(|e| e.monsno == entry.no)
+                {
                     let egg_move_ignore_table = ignore_entry.waza.clone();
-                    egg_move_table = egg_move_table.into_iter().filter(|i| !egg_move_ignore_table.contains(i) || *i == 0).collect::<Vec<u16>>(); // i == 0 check just in case
+                    egg_move_table = egg_move_table
+                        .into_iter()
+                        .filter(|i| !egg_move_ignore_table.contains(i) || *i == 0)
+                        .collect::<Vec<u16>>(); // i == 0 check just in case
                 }
                 if !egg_move_table.is_empty() {
                     let egg_move_rand = clone.rand_range(0, egg_move_table.len() as u32) as usize;
@@ -555,12 +600,27 @@ pub fn run_print(advances: u32, s0: u32, s1: u32, s2: u32, s3: u32, version: Ver
                 }
             }
 
-            writeln!(log, "Nature: {} Item: {}{}\n", NATURES_EN[nature as usize].trim(), ITEMS_EN[item].trim(), if let Some(no) = egg_move_no { format!(" Egg Move: {}", MOVES_EN[no as usize].trim()) } else {"".to_string()}).unwrap();
-
+            writeln!(
+                log,
+                "Nature: {} Item: {}{}\n",
+                NATURES_EN[nature as usize].trim(),
+                ITEMS_EN[item].trim(),
+                if let Some(no) = egg_move_no {
+                    format!(" Egg Move: {}", MOVES_EN[no as usize].trim())
+                } else {
+                    "".to_string()
+                }
+            )
+            .unwrap();
         }
 
         if rare_check < 50 {
-            writeln!(log, "Rare Species: {}", SPECIES_EN[rare_mons_no as usize].trim()).unwrap();
+            writeln!(
+                log,
+                "Rare Species: {}",
+                SPECIES_EN[rare_mons_no as usize].trim()
+            )
+            .unwrap();
             let personal_info = personal_table::BDSP.get_form_entry(rare_mons_no as usize, 0);
 
             let gender_ratio = personal_info.get_gender();
@@ -591,7 +651,8 @@ pub fn run_print(advances: u32, s0: u32, s1: u32, s2: u32, s3: u32, version: Ver
             ivs[4] = clone.next() % 32; //IV 5
             ivs[5] = clone.next() % 32; //IV 6
             let ability_rand = clone.next() % 2;
-            let ability = match ability_rand { //ability
+            let ability = match ability_rand {
+                //ability
                 0 => personal_info.get_ability_1(),
                 1 => personal_info.get_ability_2(),
                 _ => 0,
@@ -603,7 +664,12 @@ pub fn run_print(advances: u32, s0: u32, s1: u32, s2: u32, s3: u32, version: Ver
                 gender_ratio % 253
             };
 
-            writeln!(log, "IVs: {:?} Ability: {} Gender: {}", ivs, ABILITIES_EN[ability], GENDER_SYMBOLS[gender as usize]).unwrap();
+            writeln!(
+                log,
+                "IVs: {:?} Ability: {} Gender: {}",
+                ivs, ABILITIES_EN[ability], GENDER_SYMBOLS[gender as usize]
+            )
+            .unwrap();
 
             let nature = clone.next() % 25; //nature
             clone.next(); //height 1
@@ -618,8 +684,7 @@ pub fn run_print(advances: u32, s0: u32, s1: u32, s2: u32, s3: u32, version: Ver
             } else {
                 personal_info.get_item_3()
             };
-            let hatch_species = personal_info
-                .get_hatch_species();
+            let hatch_species = personal_info.get_hatch_species();
 
             let mut egg_move_no = None;
 
@@ -629,9 +694,16 @@ pub fn run_print(advances: u32, s0: u32, s1: u32, s2: u32, s3: u32, version: Ver
                 .find(|e| e.no == hatch_species as u16)
             {
                 let mut egg_move_table = entry.waza_no.clone();
-                if let Some(ignore_entry) = egg_move_ignore_table.sheet_1.iter().find(|e| e.monsno == entry.no) {
+                if let Some(ignore_entry) = egg_move_ignore_table
+                    .sheet_1
+                    .iter()
+                    .find(|e| e.monsno == entry.no)
+                {
                     let egg_move_ignore_table = ignore_entry.waza.clone();
-                    egg_move_table = egg_move_table.into_iter().filter(|i| !egg_move_ignore_table.contains(i) || *i == 0).collect::<Vec<u16>>(); // i == 0 check just in case
+                    egg_move_table = egg_move_table
+                        .into_iter()
+                        .filter(|i| !egg_move_ignore_table.contains(i) || *i == 0)
+                        .collect::<Vec<u16>>(); // i == 0 check just in case
                 }
                 if !egg_move_table.is_empty() {
                     let egg_move_rand = clone.rand_range(0, egg_move_table.len() as u32) as usize;
@@ -639,7 +711,18 @@ pub fn run_print(advances: u32, s0: u32, s1: u32, s2: u32, s3: u32, version: Ver
                 }
             }
 
-            writeln!(log, "Nature: {} Item: {}{}\n", NATURES_EN[nature as usize].trim(), ITEMS_EN[item].trim(), if let Some(no) = egg_move_no { format!(" Egg Move: {}", MOVES_EN[no as usize].trim()) } else {"".to_string()}).unwrap();
+            writeln!(
+                log,
+                "Nature: {} Item: {}{}\n",
+                NATURES_EN[nature as usize].trim(),
+                ITEMS_EN[item].trim(),
+                if let Some(no) = egg_move_no {
+                    format!(" Egg Move: {}", MOVES_EN[no as usize].trim())
+                } else {
+                    "".to_string()
+                }
+            )
+            .unwrap();
         }
 
         if contains_shiny || !shiny_only {

@@ -1,7 +1,7 @@
 #![allow(unused)]
 
-use clap::{Parser};
-use bdsp_ug_generator::{RoomType, run_print, Version};
+use bdsp_ug_generator::{run_print, RoomType, Version};
+use clap::Parser;
 
 #[derive(Parser)]
 struct Cli {
@@ -17,7 +17,7 @@ struct Cli {
     s0: String,
     s1: String,
     s2: String,
-    s3: String
+    s3: String,
 }
 
 fn main() {
@@ -38,6 +38,15 @@ fn main() {
     println!("s3: {:#08X}", s3);
     println!();
 
-    run_print(cli.advances, s0, s1, s2, s3, cli.version, cli.story_flag, cli.room, cli.shiny_only);
-
+    run_print(
+        cli.advances,
+        s0,
+        s1,
+        s2,
+        s3,
+        cli.version,
+        cli.story_flag,
+        cli.room,
+        cli.shiny_only,
+    );
 }
