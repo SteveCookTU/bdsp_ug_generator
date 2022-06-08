@@ -5,15 +5,15 @@ use bdsp_ug_generator::{
     personal_table, run_results, Filter, Pokemon, RoomType, Version, ABILITIES_EN, GENDER_SYMBOLS,
     ITEMS_EN, MOVES_EN, NATURES_EN, SPECIES_EN,
 };
-use clap::Parser;
+use clap::{ArgEnum, Parser};
 use std::fmt::Write;
 
 #[derive(Parser)]
 struct Cli {
     #[clap(arg_enum)]
-    version: Version,
+    version: ArgVersion,
     #[clap(arg_enum)]
-    room: RoomType,
+    room: ArgRoomType,
     #[clap(short = 'f', long, default_value = "6")]
     story_flag: u8,
     #[clap(short = 's', long)]
@@ -47,6 +47,68 @@ struct Cli {
     s1: String,
     s2: String,
     s3: String,
+}
+
+#[derive(ArgEnum, Clone)]
+enum ArgVersion {
+    BD = 2,
+    SP,
+}
+
+impl From<ArgVersion> for Version {
+    fn from(av: ArgVersion) -> Self {
+        match av {
+            ArgVersion::BD => Version::BD,
+            ArgVersion::SP => Version::SP,
+        }
+    }
+}
+
+#[derive(ArgEnum, PartialEq, Copy, Clone)]
+pub enum ArgRoomType {
+    SpaciousCave = 2,
+    GrasslandCave,
+    FountainspringCave,
+    RockyCave,
+    VolcanicCave,
+    SwampyCave,
+    DazzlingCave,
+    WhiteoutCave,
+    IcyCave,
+    RiverbankCave,
+    SandsearCave,
+    StillWaterCavern,
+    SunlitCavern,
+    BigBluffCavern,
+    StargleamCavern,
+    GlacialCavern,
+    BogsunkCavern,
+    TyphloCavern,
+}
+
+impl From<ArgRoomType> for RoomType {
+    fn from(art: ArgRoomType) -> Self {
+        match art {
+            ArgRoomType::SpaciousCave => RoomType::SpaciousCave,
+            ArgRoomType::GrasslandCave => RoomType::GrasslandCave,
+            ArgRoomType::FountainspringCave => RoomType::FountainspringCave,
+            ArgRoomType::RockyCave => RoomType::RockyCave,
+            ArgRoomType::VolcanicCave => RoomType::VolcanicCave,
+            ArgRoomType::SwampyCave => RoomType::SwampyCave,
+            ArgRoomType::DazzlingCave => RoomType::DazzlingCave,
+            ArgRoomType::WhiteoutCave => RoomType::WhiteoutCave,
+            ArgRoomType::IcyCave => RoomType::IcyCave,
+            ArgRoomType::RiverbankCave => RoomType::RiverbankCave,
+            ArgRoomType::SandsearCave => RoomType::SandsearCave,
+            ArgRoomType::StillWaterCavern => RoomType::StillWaterCavern,
+            ArgRoomType::SunlitCavern => RoomType::SunlitCavern,
+            ArgRoomType::BigBluffCavern => RoomType::BigBluffCavern,
+            ArgRoomType::StargleamCavern => RoomType::StargleamCavern,
+            ArgRoomType::GlacialCavern => RoomType::GlacialCavern,
+            ArgRoomType::BogsunkCavern => RoomType::BogsunkCavern,
+            ArgRoomType::TyphloCavern => RoomType::TyphloCavern,
+        }
+    }
 }
 
 fn write_pokemon(pokemon: &Pokemon, string: &mut String) {
@@ -139,9 +201,9 @@ fn main() {
     let results = run_results(
         cli.advances,
         rng,
-        cli.version,
+        cli.version.into(),
         cli.story_flag,
-        cli.room,
+        cli.room.into(),
         filter,
     );
 

@@ -1,12 +1,15 @@
 use crate::{
-    personal_table, Filter, PersonalInfo, PokeRate, RoomType, Sheet1, TamagoWazaIgnoreTable,
-    TamagoWazaTable, TypeAndSize, TypeRate, UgEncount, UgEncountSheet, UgPokemonData,
-    UgRandMarkSheet, UgSpecialPokemon, Version, XorShift, ABILITIES_EN, GENDER_SYMBOLS, ITEMS_EN,
-    MOVES_EN, NATURES_EN, SPECIES_EN, TAMAGO_WAZA_IGNORE_TABLE, TAMAGO_WAZA_TABLE, UG_ENCOUNT_02,
-    UG_ENCOUNT_03, UG_ENCOUNT_04, UG_ENCOUNT_05, UG_ENCOUNT_06, UG_ENCOUNT_07, UG_ENCOUNT_08,
-    UG_ENCOUNT_09, UG_ENCOUNT_10, UG_ENCOUNT_11, UG_ENCOUNT_12, UG_ENCOUNT_20, UG_POKEMON_DATA,
-    UG_RAND_MARK, UG_SPECIAL_POKEMON,
+    personal_table, Filter, PokeRate, RoomType, Sheet1, TamagoWazaIgnoreTable, TamagoWazaTable,
+    TypeAndSize, TypeRate, UgEncount, UgEncountSheet, UgPokemonData, UgRandMarkSheet,
+    UgSpecialPokemon, Version, ABILITIES_EN, GENDER_SYMBOLS, ITEMS_EN, MOVES_EN, NATURES_EN,
+    SPECIES_EN, TAMAGO_WAZA_IGNORE_TABLE, TAMAGO_WAZA_TABLE, UG_ENCOUNT_02, UG_ENCOUNT_03,
+    UG_ENCOUNT_04, UG_ENCOUNT_05, UG_ENCOUNT_06, UG_ENCOUNT_07, UG_ENCOUNT_08, UG_ENCOUNT_09,
+    UG_ENCOUNT_10, UG_ENCOUNT_11, UG_ENCOUNT_12, UG_ENCOUNT_20, UG_POKEMON_DATA, UG_RAND_MARK,
+    UG_SPECIAL_POKEMON,
 };
+
+use crate::personal_info::PersonalInfo;
+use crate::xorshift::XorShift;
 
 pub struct Advance {
     pub advance: u32,

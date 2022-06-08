@@ -10,9 +10,6 @@ pub mod xorshift;
 pub use filter::*;
 pub use run_results::*;
 
-use crate::personal_info::PersonalInfo;
-use crate::xorshift::XorShift;
-use clap::ArgEnum;
 use lazy_static::lazy_static;
 use resource_util::load_string_list;
 use serde::Deserialize;
@@ -174,13 +171,13 @@ struct TamagoWazaIgnoreEntry {
     waza: Vec<u16>,
 }
 
-#[derive(ArgEnum, PartialEq, Copy, Clone)]
+#[derive(PartialEq, Copy, Clone)]
 pub enum Version {
     BD = 2,
     SP,
 }
 
-#[derive(ArgEnum, PartialEq, Copy, Clone)]
+#[derive(PartialEq, Copy, Clone)]
 pub enum RoomType {
     SpaciousCave = 2,
     GrasslandCave,
