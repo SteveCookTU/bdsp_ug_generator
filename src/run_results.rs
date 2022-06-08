@@ -1,12 +1,4 @@
-use crate::{
-    personal_table, PersonalInfo, PokeRate, RoomType, Sheet1, TamagoWazaIgnoreTable,
-    TamagoWazaTable, TypeAndSize, TypeRate, UgEncount, UgEncountSheet, UgPokemonData,
-    UgRandMarkSheet, UgSpecialPokemon, Version, XorShift, ABILITIES_EN, GENDER_SYMBOLS, ITEMS_EN,
-    MOVES_EN, NATURES_EN, SPECIES_EN, TAMAGO_WAZA_IGNORE_TABLE, TAMAGO_WAZA_TABLE, UG_ENCOUNT_02,
-    UG_ENCOUNT_03, UG_ENCOUNT_04, UG_ENCOUNT_05, UG_ENCOUNT_06, UG_ENCOUNT_07, UG_ENCOUNT_08,
-    UG_ENCOUNT_09, UG_ENCOUNT_10, UG_ENCOUNT_11, UG_ENCOUNT_12, UG_ENCOUNT_20, UG_POKEMON_DATA,
-    UG_RAND_MARK, UG_SPECIAL_POKEMON,
-};
+use crate::{personal_table, PersonalInfo, PokeRate, RoomType, Sheet1, TamagoWazaIgnoreTable, TamagoWazaTable, TypeAndSize, TypeRate, UgEncount, UgEncountSheet, UgPokemonData, UgRandMarkSheet, UgSpecialPokemon, Version, XorShift, ABILITIES_EN, GENDER_SYMBOLS, ITEMS_EN, MOVES_EN, NATURES_EN, SPECIES_EN, TAMAGO_WAZA_IGNORE_TABLE, TAMAGO_WAZA_TABLE, UG_ENCOUNT_02, UG_ENCOUNT_03, UG_ENCOUNT_04, UG_ENCOUNT_05, UG_ENCOUNT_06, UG_ENCOUNT_07, UG_ENCOUNT_08, UG_ENCOUNT_09, UG_ENCOUNT_10, UG_ENCOUNT_11, UG_ENCOUNT_12, UG_ENCOUNT_20, UG_POKEMON_DATA, UG_RAND_MARK, UG_SPECIAL_POKEMON, Filter};
 
 pub struct Advance {
     pub regular_pokemon: Vec<Pokemon>,
@@ -19,7 +11,7 @@ pub struct Pokemon {
     pub pid: u32,
     pub shiny: bool,
     pub ivs: [u8; 6],
-    pub ability: u16,
+    pub ability: u8,
     pub gender: u8,
     pub nature: u8,
     pub item: u16,
@@ -35,7 +27,7 @@ pub fn run_results(
     version: Version,
     story_flag: u8,
     room: RoomType,
-    shiny_only: bool,
+    filter: Filter
 ) -> Vec<Advance> {
     let mut results = Vec::with_capacity(advances as usize);
 
@@ -367,13 +359,7 @@ pub fn run_results(
             ivs[3] = (clone.next() % 32) as u8; //IV 4
             ivs[4] = (clone.next() % 32) as u8; //IV 5
             ivs[5] = (clone.next() % 32) as u8; //IV 6
-            let ability_rand = clone.next() % 2;
-            let ability = match ability_rand {
-                //ability
-                0 => personal_info.get_ability_1(),
-                1 => personal_info.get_ability_2(),
-                _ => 0,
-            };
+            let ability = (clone.next() % 2) as u8;
             let gender = if gender_ratio != 255 && gender_ratio != 254 && gender_ratio != 0 {
                 let gender_rand = clone.next() % 253;
                 ((gender_rand as usize) + 1 < gender_ratio) as usize
@@ -429,7 +415,7 @@ pub fn run_results(
                 pid: curr_pid,
                 shiny: is_shiny,
                 ivs,
-                ability: ability as u16,
+                ability,
                 gender: gender as u8,
                 nature: nature as u8,
                 item: item as u16,
@@ -465,13 +451,7 @@ pub fn run_results(
             ivs[3] = (clone.next() % 32) as u8; //IV 4
             ivs[4] = (clone.next() % 32) as u8; //IV 5
             ivs[5] = (clone.next() % 32) as u8; //IV 6
-            let ability_rand = clone.next() % 2;
-            let ability = match ability_rand {
-                //ability
-                0 => personal_info.get_ability_1(),
-                1 => personal_info.get_ability_2(),
-                _ => 0,
-            };
+            let ability = (clone.next() % 2) as u8;
             let gender = if gender_ratio != 255 && gender_ratio != 254 && gender_ratio != 0 {
                 let gender_rand = clone.next() % 253;
                 ((gender_rand as usize) + 1 < gender_ratio) as usize
@@ -525,7 +505,7 @@ pub fn run_results(
                 pid: curr_pid,
                 shiny: is_shiny,
                 ivs,
-                ability: ability as u16,
+                ability,
                 gender: gender as u8,
                 nature: nature as u8,
                 item: item as u16,
@@ -533,7 +513,7 @@ pub fn run_results(
             });
         }
 
-        if contains_shiny || !shiny_only {
+        if filter.passes_filter(&advance) {
             results.push(advance);
         }
         rng.next();

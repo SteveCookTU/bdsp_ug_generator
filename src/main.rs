@@ -1,7 +1,8 @@
 #![allow(unused)]
 
-use bdsp_ug_generator::{run_print, RoomType, Version};
+use bdsp_ug_generator::{run_results, Pokemon, RoomType, Version, ABILITIES_EN, GENDER_SYMBOLS, ITEMS_EN, MOVES_EN, NATURES_EN, SPECIES_EN, personal_table, Filter};
 use clap::Parser;
+use std::fmt::Write;
 
 #[derive(Parser)]
 struct Cli {
@@ -13,11 +14,42 @@ struct Cli {
     story_flag: u8,
     #[clap(short = 's', long)]
     shiny_only: bool,
+    #[clap(long, default_value = "0/0/0/0/0/0")]
+    min_ivs: String,
+    #[clap(long, default_value = "31/31/31/31/31/31")]
+    max_ivs: String,
+    #[clap(long)]
+    species: Option<u16>,
+    #[clap(long)]
+    nature: Option<u8>,
+    #[clap(long)]
+    ability: Option<u8>,
+    #[clap(long)]
+    item: Option<u16>,
+    #[clap(long)]
+    egg_move: Option<u16>,
+    #[clap(long)]
+    gender: Option<u8>,
     advances: u32,
     s0: String,
     s1: String,
     s2: String,
     s3: String,
+}
+
+fn write_pokemon(pokemon: &Pokemon, string: &mut String) {
+    let personal_info = personal_table::BDSP.get_form_entry(pokemon.species as usize, 0);
+    let ability = match pokemon.ability {
+        0 => personal_info.get_ability_1(),
+        _ => personal_info.get_ability_2()
+    };
+    writeln!(string, "Species: {}\nPID: {:08X} EC: {:08X} Shiny: {}\nIVs: {:?} Ability: {} Gender: {}\nNature: {} Item: {}{}\n", SPECIES_EN[pokemon.species as usize], pokemon.pid, pokemon.ec, pokemon.shiny, pokemon.ivs, ABILITIES_EN[ability],  GENDER_SYMBOLS[pokemon.gender as usize], NATURES_EN[pokemon.nature as usize].trim(),
+             ITEMS_EN[pokemon.item as usize].trim(),
+             if let Some(no) = pokemon.egg_move {
+                 format!(" Egg Move: {}", MOVES_EN[no as usize].trim())
+             } else {
+                 "".to_string()
+             }).unwrap();
 }
 
 fn main() {
@@ -38,7 +70,38 @@ fn main() {
     println!("s3: {:#08X}", s3);
     println!();
 
-    run_print(
+    let min_split = cli.min_ivs.split('/');
+    let max_split = cli.max_ivs.split('/');
+
+    let mut min_ivs = [0, 0, 0, 0, 0, 0];
+
+    for (i, val) in min_split.take(6).enumerate() {
+        if !val.is_empty() {
+            min_ivs[i] = val.parse::<u8>().expect(&format!("Failed to parse min iv {}", i));
+        }
+    }
+
+    let mut max_ivs = [31, 31, 31, 31, 31, 31];
+
+    for (i, val) in max_split.take(6).enumerate() {
+        if !val.is_empty() {
+            max_ivs[i] = val.parse::<u8>().expect(&format!("Failed to parse max iv {}", i));
+        }
+    }
+
+    let filter = Filter {
+        shiny: cli.shiny_only,
+        species: cli.species,
+        min_ivs,
+        max_ivs,
+        ability: cli.ability,
+        nature: cli.nature,
+        item: cli.item,
+        egg_move: cli.egg_move,
+        gender: cli.gender
+    };
+
+    let results = run_results(
         cli.advances,
         s0,
         s1,
@@ -47,6 +110,26 @@ fn main() {
         cli.version,
         cli.story_flag,
         cli.room,
-        cli.shiny_only,
+        filter
     );
+
+    let mut print = String::new();
+
+    for (advance, result) in results.iter().enumerate() {
+        writeln!(
+            print,
+            "-------------------------------------------\nAdvances: {}",
+            advance
+        )
+        .unwrap();
+        for pokemon in result.regular_pokemon.iter() {
+            write_pokemon(pokemon, &mut print);
+        }
+
+        if let Some(pokemon) = &result.rare_pokemon {
+            write_pokemon(pokemon, &mut print);
+        }
+    }
+
+    println!("{}", print);
 }
