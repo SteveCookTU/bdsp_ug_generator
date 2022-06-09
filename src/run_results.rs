@@ -37,6 +37,7 @@ pub fn run_results(
     story_flag: u8,
     room: RoomType,
     filter: Filter,
+    diglett: bool,
 ) -> Vec<Advance> {
     let mut results = Vec::with_capacity(advances as usize);
 
@@ -194,6 +195,8 @@ pub fn run_results(
     let egg_move_ignore_table =
         serde_json::from_str::<TamagoWazaIgnoreTable>(TAMAGO_WAZA_IGNORE_TABLE).unwrap();
 
+    let rare_try_count = if diglett { 2 } else { 1 };
+
     let secret_base_used_tiles = 0;
     for curr_advance in 0..=advances {
         let mut spawn_count = rand_mark_data.min;
@@ -322,7 +325,12 @@ pub fn run_results(
                     .unwrap();
                 poke_rates.push(PokeRate {
                     monsno: pokemon_data.monsno,
-                    rate: pokemon_data.flag_rate[story_flag as usize - 1] as u16,
+                    rate: if !diglett {
+                        pokemon_data.flag_rate[story_flag as usize - 1] as u16
+                    } else {
+                        pokemon_data.flag_rate[story_flag as usize - 1] as u16
+                            * pokemon_data.rate_up as u16
+                    },
                 });
             }
 
@@ -348,13 +356,21 @@ pub fn run_results(
 
             let ec = clone.next(); //EC
             let curr_shiny_rand = clone.next(); //Shiny Rand
-            let curr_pid = clone.next(); //PID Called twice if diglett is on!
+            let mut curr_pid = 0;
+            let mut is_shiny = false;
+            for _ in 0..rare_try_count {
+                curr_pid = clone.next(); //PID Called twice if diglett is on!
 
-            let is_shiny = (curr_shiny_rand & 0xFFF0
-                ^ curr_shiny_rand >> 0x10
-                ^ curr_pid >> 0x10
-                ^ curr_pid & 0xFFF0)
-                < 0x10;
+                is_shiny = (curr_shiny_rand & 0xFFF0
+                    ^ curr_shiny_rand >> 0x10
+                    ^ curr_pid >> 0x10
+                    ^ curr_pid & 0xFFF0)
+                    < 0x10;
+
+                if is_shiny {
+                    break;
+                }
+            }
 
             let mut ivs = [0; 6];
 

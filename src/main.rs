@@ -13,6 +13,8 @@ struct Cli {
     version: ArgVersion,
     #[clap(arg_enum)]
     room: ArgRoomType,
+    #[clap(short, long)]
+    diglett: bool,
     #[clap(short = 'f', long, default_value = "6")]
     story_flag: u8,
     #[clap(short = 's', long)]
@@ -199,6 +201,7 @@ fn main() {
         cli.story_flag,
         cli.room.into(),
         filter,
+        cli.diglett,
     );
 
     let mut print = String::new();
