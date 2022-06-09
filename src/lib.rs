@@ -3,22 +3,14 @@ mod flag_util;
 pub mod personal_info;
 pub mod personal_info_bdsp;
 pub mod personal_table;
-mod resource_util;
+pub mod resource_util;
 mod run_results;
 pub mod xorshift;
 
 pub use filter::*;
 pub use run_results::*;
-
-use lazy_static::lazy_static;
-use resource_util::load_string_list;
 use serde::Deserialize;
 
-const SPECIES_EN_RAW: &str = include_str!("../resources/text/other/en/species_en.txt");
-const ABILITIES_EN_RAW: &str = include_str!("../resources/text/other/en/abilities_en.txt");
-const NATURES_EN_RAW: &str = include_str!("../resources/text/other/en/natures_en.txt");
-const MOVES_EN_RAW: &str = include_str!("../resources/text/other/en/moves_en.txt");
-const ITEMS_EN_RAW: &str = include_str!("../resources/text/items/items_en.txt");
 const TAMAGO_WAZA_TABLE: &str = include_str!("../TamagoWazaTable.json");
 const TAMAGO_WAZA_IGNORE_TABLE: &str = include_str!("../UgTamagoWazaIgnoreTable.json");
 const UG_POKEMON_DATA: &str = include_str!("../UgPokemonData.json");
@@ -36,15 +28,6 @@ const UG_ENCOUNT_10: &str = include_str!("../UgEncount_10.json");
 const UG_ENCOUNT_11: &str = include_str!("../UgEncount_11.json");
 const UG_ENCOUNT_12: &str = include_str!("../UgEncount_12.json");
 const UG_ENCOUNT_20: &str = include_str!("../UgEncount_20.json");
-pub const GENDER_SYMBOLS: [char; 3] = ['♂', '♀', '-'];
-
-lazy_static! {
-    pub static ref SPECIES_EN: Vec<&'static str> = load_string_list(SPECIES_EN_RAW);
-    pub static ref ABILITIES_EN: Vec<&'static str> = load_string_list(ABILITIES_EN_RAW);
-    pub static ref NATURES_EN: Vec<&'static str> = load_string_list(NATURES_EN_RAW);
-    pub static ref MOVES_EN: Vec<&'static str> = load_string_list(MOVES_EN_RAW);
-    pub static ref ITEMS_EN: Vec<&'static str> = load_string_list(ITEMS_EN_RAW);
-}
 
 #[derive(Deserialize, Clone)]
 struct UgSpecialPokemon {
@@ -56,7 +39,6 @@ struct UgSpecialPokemon {
 struct Sheet1 {
     id: u8,
     monsno: u16,
-    version: u8,
     #[serde(rename = "Dspecialrate")]
     d_special_rate: u16,
     #[serde(rename = "Pspecialrate")]
@@ -90,15 +72,12 @@ struct UgPokemon {
     type_2_id: i8,
     size: u8,
     #[serde(rename = "movetype")]
+    #[allow(dead_code)]
     move_type: u8,
-    #[serde(rename = "reactioncode")]
-    reaction_code: Vec<u8>,
-    move_rate: Vec<u8>,
-    submove_rate: Vec<u8>,
-    reaction: Vec<u8>,
     #[serde(rename = "flagrate")]
     flag_rate: Vec<u8>,
     #[serde(rename = "rateup")]
+    #[allow(dead_code)]
     rate_up: u8,
 }
 
@@ -112,13 +91,13 @@ struct UgRandMark {
     id: u8,
     #[serde(rename = "FileName")]
     file_name: String,
-    size: u8,
     min: u8,
     max: u8,
     smax: u8,
     mmax: u8,
     lmax: u8,
     llmax: u8,
+    #[allow(dead_code)]
     watermax: u8,
     typerate: Vec<u16>,
 }
@@ -151,8 +130,6 @@ struct TamagoWazaTable {
 #[derive(Deserialize)]
 struct TamagoWazaEntry {
     no: u16,
-    #[serde(rename = "formNo")]
-    form_no: u16,
     #[serde(rename = "wazaNo")]
     waza_no: Vec<u16>,
 }
@@ -171,13 +148,13 @@ struct TamagoWazaIgnoreEntry {
     waza: Vec<u16>,
 }
 
-#[derive(PartialEq, Copy, Clone)]
+#[derive(PartialEq, Eq, Copy, Clone)]
 pub enum Version {
     BD = 2,
     SP,
 }
 
-#[derive(PartialEq, Copy, Clone)]
+#[derive(PartialEq, Eq, Copy, Clone)]
 pub enum RoomType {
     SpaciousCave = 2,
     GrasslandCave,

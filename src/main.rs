@@ -1,11 +1,10 @@
 #![allow(unused)]
 
+use bdsp_ug_generator::resource_util::load_string_list;
 use bdsp_ug_generator::xorshift::XorShift;
-use bdsp_ug_generator::{
-    personal_table, run_results, Filter, Pokemon, RoomType, Version, ABILITIES_EN, GENDER_SYMBOLS,
-    ITEMS_EN, MOVES_EN, NATURES_EN, SPECIES_EN,
-};
+use bdsp_ug_generator::{personal_table, run_results, Filter, Pokemon, RoomType, Version};
 use clap::{ArgEnum, Parser};
+use lazy_static::lazy_static;
 use std::fmt::Write;
 
 #[derive(Parser)]
@@ -64,7 +63,7 @@ impl From<ArgVersion> for Version {
     }
 }
 
-#[derive(ArgEnum, PartialEq, Copy, Clone)]
+#[derive(ArgEnum, Copy, Clone)]
 pub enum ArgRoomType {
     SpaciousCave = 2,
     GrasslandCave,
@@ -153,7 +152,7 @@ fn main() {
         if !val.is_empty() {
             min_ivs[i] = val
                 .parse::<u8>()
-                .expect(&format!("Failed to parse min iv {}", i));
+                .unwrap_or_else(|_| panic!("Failed to parse min iv {}", i));
         }
     }
 
@@ -163,26 +162,21 @@ fn main() {
         if !val.is_empty() {
             max_ivs[i] = val
                 .parse::<u8>()
-                .expect(&format!("Failed to parse max iv {}", i));
+                .unwrap_or_else(|_| panic!("Failed to parse max iv {}", i));
         }
     }
 
-    let nature = if let Some(nature_list_str) = cli.nature {
-        Some(
-            nature_list_str
-                .split(',')
-                .filter_map(|i| {
-                    if i.is_empty() {
-                        None
-                    } else {
-                        Some(i.parse::<u8>().expect("Failed to parse nature to u8"))
-                    }
-                })
-                .collect::<Vec<u8>>(),
-        )
-    } else {
-        None
-    };
+    let nature = cli.nature.map(|s| {
+        s.split(',')
+            .filter_map(|i| {
+                if i.is_empty() {
+                    None
+                } else {
+                    Some(i.parse::<u8>().expect("Failed to parse nature to u8"))
+                }
+            })
+            .collect::<Vec<u8>>()
+    });
 
     let filter = Filter {
         shiny: cli.shiny_only,
@@ -226,4 +220,20 @@ fn main() {
     }
 
     println!("{}", print);
+}
+
+pub const GENDER_SYMBOLS: [char; 3] = ['♂', '♀', '-'];
+
+const SPECIES_EN_RAW: &str = include_str!("../resources/text/other/en/species_en.txt");
+const ABILITIES_EN_RAW: &str = include_str!("../resources/text/other/en/abilities_en.txt");
+const NATURES_EN_RAW: &str = include_str!("../resources/text/other/en/natures_en.txt");
+const MOVES_EN_RAW: &str = include_str!("../resources/text/other/en/moves_en.txt");
+const ITEMS_EN_RAW: &str = include_str!("../resources/text/items/items_en.txt");
+
+lazy_static! {
+    pub static ref SPECIES_EN: Vec<&'static str> = load_string_list(SPECIES_EN_RAW);
+    pub static ref ABILITIES_EN: Vec<&'static str> = load_string_list(ABILITIES_EN_RAW);
+    pub static ref NATURES_EN: Vec<&'static str> = load_string_list(NATURES_EN_RAW);
+    pub static ref MOVES_EN: Vec<&'static str> = load_string_list(MOVES_EN_RAW);
+    pub static ref ITEMS_EN: Vec<&'static str> = load_string_list(ITEMS_EN_RAW);
 }

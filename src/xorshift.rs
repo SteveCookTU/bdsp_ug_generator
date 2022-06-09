@@ -1,3 +1,4 @@
+#![allow(clippy::should_implement_trait)]
 #[derive(Copy, Clone)]
 pub struct XorShift {
     pub state: [u32; 4],
@@ -87,7 +88,7 @@ impl XorShift {
     }
 
     pub fn rand_range_float(&mut self, min: f32, max: f32) -> f32 {
-        let t = ((self.next() & 0x7FFFFF) as f32 * f32::from_be_bytes([0x34, 00, 00, 00]));
+        let t = (self.next() & 0x7FFFFF) as f32 * f32::from_be_bytes([0x34, 00, 00, 00]);
         t * min + (1.0 - t) * max
     }
 }

@@ -1,4 +1,4 @@
-use crate::personal_info::{form_index, is_valid_type_combination, PersonalInfo};
+use crate::personal_info::{form_index, PersonalInfo};
 use crate::personal_info_bdsp;
 use lazy_static::lazy_static;
 use personal_info_bdsp::PersonalInfoBDSP;

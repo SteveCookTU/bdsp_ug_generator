@@ -1,11 +1,10 @@
 use crate::{
     personal_table, Filter, PokeRate, RoomType, Sheet1, TamagoWazaIgnoreTable, TamagoWazaTable,
     TypeAndSize, TypeRate, UgEncount, UgEncountSheet, UgPokemonData, UgRandMarkSheet,
-    UgSpecialPokemon, Version, ABILITIES_EN, GENDER_SYMBOLS, ITEMS_EN, MOVES_EN, NATURES_EN,
-    SPECIES_EN, TAMAGO_WAZA_IGNORE_TABLE, TAMAGO_WAZA_TABLE, UG_ENCOUNT_02, UG_ENCOUNT_03,
-    UG_ENCOUNT_04, UG_ENCOUNT_05, UG_ENCOUNT_06, UG_ENCOUNT_07, UG_ENCOUNT_08, UG_ENCOUNT_09,
-    UG_ENCOUNT_10, UG_ENCOUNT_11, UG_ENCOUNT_12, UG_ENCOUNT_20, UG_POKEMON_DATA, UG_RAND_MARK,
-    UG_SPECIAL_POKEMON,
+    UgSpecialPokemon, Version, TAMAGO_WAZA_IGNORE_TABLE, TAMAGO_WAZA_TABLE, UG_ENCOUNT_02,
+    UG_ENCOUNT_03, UG_ENCOUNT_04, UG_ENCOUNT_05, UG_ENCOUNT_06, UG_ENCOUNT_07, UG_ENCOUNT_08,
+    UG_ENCOUNT_09, UG_ENCOUNT_10, UG_ENCOUNT_11, UG_ENCOUNT_12, UG_ENCOUNT_20, UG_POKEMON_DATA,
+    UG_RAND_MARK, UG_SPECIAL_POKEMON,
 };
 
 use crate::personal_info::PersonalInfo;
@@ -45,7 +44,7 @@ pub fn run_results(
     let special_pokemon = special_pokemon
         .sheet_sheet_1
         .into_iter()
-        .filter_map(|s| if s.id == room as u8 { Some(s) } else { None })
+        .filter(|s| s.id == room as u8)
         .collect::<Vec<Sheet1>>();
 
     let mut special_pokemon_rates = special_pokemon
@@ -69,7 +68,7 @@ pub fn run_results(
 
     let ug_pokemon_data = serde_json::from_str::<UgPokemonData>(UG_POKEMON_DATA).unwrap();
 
-    let mut ug_rand_mark = serde_json::from_str::<UgRandMarkSheet>(UG_RAND_MARK).unwrap();
+    let ug_rand_mark = serde_json::from_str::<UgRandMarkSheet>(UG_RAND_MARK).unwrap();
 
     let ug_encount_str = match ug_rand_mark
         .table
@@ -92,7 +91,7 @@ pub fn run_results(
         "12" => UG_ENCOUNT_12,
         _ => UG_ENCOUNT_20,
     };
-    let mut ug_encount = serde_json::from_str::<UgEncountSheet>(ug_encount_str).unwrap();
+    let ug_encount = serde_json::from_str::<UgEncountSheet>(ug_encount_str).unwrap();
 
     let opposite_version = match version {
         Version::BD => Version::SP,
@@ -190,15 +189,14 @@ pub fn run_results(
         llmax -= 1;
     }
 
-    let mut egg_move_table = serde_json::from_str::<TamagoWazaTable>(TAMAGO_WAZA_TABLE).unwrap();
-    let mut egg_move_ignore_table =
+    let egg_move_table = serde_json::from_str::<TamagoWazaTable>(TAMAGO_WAZA_TABLE).unwrap();
+    let egg_move_ignore_table =
         serde_json::from_str::<TamagoWazaIgnoreTable>(TAMAGO_WAZA_IGNORE_TABLE).unwrap();
 
     let secret_base_used_tiles = 0;
     for curr_advance in 0..=advances {
-        let mut contains_shiny = false;
         let mut spawn_count = rand_mark_data.min;
-        let mut clone = rng.clone();
+        let mut clone = rng;
 
         let rare_check = clone.rand_range(0, 100);
         let mut rare_mons_no = 0;
@@ -244,7 +242,7 @@ pub fn run_results(
             let pokemon_with_type = mons_data_indexs
                 .iter()
                 .filter(|ts| ts.r#type == r#type)
-                .map(|ts| *ts)
+                .copied()
                 .collect::<Vec<TypeAndSize>>();
             let mut exist_size_list = Vec::new();
             for ts in pokemon_with_type.iter() {
@@ -265,7 +263,7 @@ pub fn run_results(
                     .collect();
             }
 
-            let size = if sizes.len() != 0 {
+            let size = if !sizes.is_empty() {
                 let size_rand = clone.rand_range(0, sizes.len() as u32);
                 let size = sizes[size_rand as usize];
                 sizes.remove(size_rand as usize);
@@ -356,9 +354,6 @@ pub fn run_results(
                 ^ curr_pid >> 0x10
                 ^ curr_pid & 0xFFF0)
                 < 0x10;
-            if is_shiny {
-                contains_shiny = true;
-            }
 
             let mut ivs = [0; 6];
 
@@ -448,9 +443,6 @@ pub fn run_results(
                 ^ curr_pid >> 0x10
                 ^ curr_pid & 0xFFF0)
                 < 0x10;
-            if is_shiny {
-                contains_shiny = true;
-            }
 
             let mut ivs = [0; 6];
 
