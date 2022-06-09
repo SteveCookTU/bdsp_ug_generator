@@ -16,6 +16,7 @@ pub struct Advance {
     pub rare_pokemon: Option<Pokemon>,
 }
 
+#[derive(Copy, Clone, Debug)]
 pub struct Pokemon {
     pub species: u16,
     pub ec: u32,

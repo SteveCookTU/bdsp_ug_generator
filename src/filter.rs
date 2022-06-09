@@ -1,6 +1,6 @@
 use crate::{Advance, Pokemon};
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct Filter {
     pub shiny: bool,
     pub species: Option<u16>,
@@ -116,8 +116,12 @@ impl Filter {
             }
         }
 
-        if pokemon.egg_move != self.egg_move {
-            return false;
+        if let Some(egg_move) = self.egg_move {
+            if let Some(p_egg_move) = self.egg_move {
+                if egg_move != p_egg_move {
+                    return false;
+                }
+            }
         }
 
         if let Some(gender) = self.gender {
