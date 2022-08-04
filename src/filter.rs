@@ -11,6 +11,7 @@ pub struct Filter {
     pub item: Option<u16>,
     pub egg_move: Option<u16>,
     pub gender: Option<u8>,
+    pub exclusive: bool,
 }
 
 impl Filter {
@@ -75,7 +76,7 @@ impl Filter {
         false
     }
 
-    fn check_pokemon(&self, pokemon: &Pokemon) -> bool {
+    pub fn check_pokemon(&self, pokemon: &Pokemon) -> bool {
         if let Some(species) = self.species {
             if pokemon.species != species {
                 return false;

@@ -43,6 +43,11 @@ struct Cli {
     egg_move: Option<u16>,
     #[clap(long, help = "Options are 0, 1, 2 for male, female, genderless")]
     gender: Option<u8>,
+    #[clap(
+        short,
+        help = "Exclude pokemon within frames that do not match filter settings"
+    )]
+    exclusive: bool,
     advances: u32,
     s0: String,
     s1: String,
@@ -190,6 +195,7 @@ fn main() {
         item: cli.item,
         egg_move: cli.egg_move,
         gender: cli.gender,
+        exclusive: cli.exclusive,
     };
 
     let rng = XorShift::from_state([s0, s1, s2, s3]);

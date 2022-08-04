@@ -531,9 +531,20 @@ pub fn run_results(
             });
         }
 
-        if filter.passes_filter(&advance) {
+        if filter.exclusive {
+            advance.regular_pokemon = advance
+                .regular_pokemon
+                .into_iter()
+                .filter(|p| filter.check_pokemon(p))
+                .collect::<Vec<Pokemon>>();
+            advance.rare_pokemon = advance.rare_pokemon.filter(|p| filter.check_pokemon(p));
+            if !advance.regular_pokemon.is_empty() || advance.rare_pokemon.is_some() {
+                results.push(advance);
+            }
+        } else if filter.passes_filter(&advance) {
             results.push(advance);
         }
+
         rng.next();
     }
     results
