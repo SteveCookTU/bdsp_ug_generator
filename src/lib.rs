@@ -177,7 +177,7 @@ pub enum RoomType {
     TyphloCavern,
 }
 
-pub fn available_pokemon(version: Version, story_flag: u8, room: Option<RoomType>) -> Vec<u16> {
+pub fn available_pokemon(version: Version, story_flag: u8, room: RoomType) -> Vec<u16> {
     let mut available = HashSet::new();
 
     let opposite_version = match version {
@@ -185,53 +185,59 @@ pub fn available_pokemon(version: Version, story_flag: u8, room: Option<RoomType
         Version::SP => Version::BD,
     };
 
-    if let Some(room) = room {
-        let ug_encount_str = match room as u8 {
-            2 => UG_ENCOUNT_02,
-            3 => UG_ENCOUNT_03,
-            4 => UG_ENCOUNT_04,
-            5 => UG_ENCOUNT_05,
-            6 => UG_ENCOUNT_06,
-            7 => UG_ENCOUNT_07,
-            8 => UG_ENCOUNT_08,
-            9 => UG_ENCOUNT_09,
-            10 => UG_ENCOUNT_10,
-            11 => UG_ENCOUNT_11,
-            _ => UG_ENCOUNT_12
-        };
-        let ug_encount = serde_json::from_str::<UgEncountSheet>(ug_encount_str).unwrap();
-        for pokemon in ug_encount.table {
-            if pokemon.version != opposite_version as u8 && pokemon.zukan_flag <= story_flag {
-                available.insert(pokemon.monsno);
+    let special_pokemon = serde_json::from_str::<UgSpecialPokemon>(UG_SPECIAL_POKEMON).unwrap();
+
+    let special_pokemon = special_pokemon
+        .sheet_sheet_1
+        .into_iter()
+        .filter(|s| s.id == room as u8)
+        .collect::<Vec<Sheet1>>();
+
+    for pokemon in special_pokemon {
+        match version {
+            Version::BD => {
+                if pokemon.d_special_rate > 0 {
+                    available.insert(pokemon.monsno);
+                }
             }
-        }
-
-    } else {
-        for i in 2..13 {
-            let ug_encount_str = match i {
-                2 => UG_ENCOUNT_02,
-                3 => UG_ENCOUNT_03,
-                4 => UG_ENCOUNT_04,
-                5 => UG_ENCOUNT_05,
-                6 => UG_ENCOUNT_06,
-                7 => UG_ENCOUNT_07,
-                8 => UG_ENCOUNT_08,
-                9 => UG_ENCOUNT_09,
-                10 => UG_ENCOUNT_10,
-                11 => UG_ENCOUNT_11,
-                _ => UG_ENCOUNT_12
-            };
-
-            let ug_encount = serde_json::from_str::<UgEncountSheet>(ug_encount_str).unwrap();
-            for pokemon in ug_encount.table {
-                if pokemon.version != opposite_version as u8 && pokemon.zukan_flag <= story_flag {
+            Version::SP => {
+                if pokemon.p_special_rate > 0 {
                     available.insert(pokemon.monsno);
                 }
             }
         }
     }
 
+    let ug_rand_mark = serde_json::from_str::<UgRandMarkSheet>(UG_RAND_MARK).unwrap();
 
+    let ug_encount_str = match ug_rand_mark
+        .table
+        .iter()
+        .find(|t| t.id == room as u8)
+        .unwrap()
+        .file_name
+        .trim_start_matches("UgEncount_")
+    {
+        "02" => UG_ENCOUNT_02,
+        "03" => UG_ENCOUNT_03,
+        "04" => UG_ENCOUNT_04,
+        "05" => UG_ENCOUNT_05,
+        "06" => UG_ENCOUNT_06,
+        "07" => UG_ENCOUNT_07,
+        "08" => UG_ENCOUNT_08,
+        "09" => UG_ENCOUNT_09,
+        "10" => UG_ENCOUNT_10,
+        "11" => UG_ENCOUNT_11,
+        "12" => UG_ENCOUNT_12,
+        _ => UG_ENCOUNT_20,
+    };
+
+    let ug_encount = serde_json::from_str::<UgEncountSheet>(ug_encount_str).unwrap();
+    for pokemon in ug_encount.table {
+        if pokemon.version != opposite_version as u8 && pokemon.zukan_flag <= story_flag {
+            available.insert(pokemon.monsno);
+        }
+    }
 
     available.into_iter().collect()
 }
