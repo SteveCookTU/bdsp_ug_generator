@@ -7,10 +7,10 @@ pub mod resource_util;
 mod run_results;
 pub mod xorshift;
 
-use std::collections::HashSet;
 pub use filter::*;
 pub use run_results::*;
 use serde::Deserialize;
+use std::collections::HashSet;
 
 const TAMAGO_WAZA_TABLE: &str = include_str!("../TamagoWazaTable.json");
 const TAMAGO_WAZA_IGNORE_TABLE: &str = include_str!("../UgTamagoWazaIgnoreTable.json");
@@ -175,6 +175,38 @@ pub enum RoomType {
     GlacialCavern,
     BogsunkCavern,
     TyphloCavern,
+}
+
+pub fn get_available_egg_moves(species: u16) -> Vec<u16> {
+    let egg_move_table = serde_json::from_str::<TamagoWazaTable>(TAMAGO_WAZA_TABLE).unwrap();
+    let egg_move_ignore_table =
+        serde_json::from_str::<TamagoWazaIgnoreTable>(TAMAGO_WAZA_IGNORE_TABLE).unwrap();
+    let hatch_species = personal_table::BDSP
+        .get_form_entry(species as usize, 0)
+        .get_hatch_species();
+
+    if let Some(entry) = egg_move_table
+        .data
+        .iter()
+        .find(|e| e.no == hatch_species as u16)
+    {
+        let mut egg_move_table = entry.waza_no.clone();
+        if let Some(ignore_entry) = egg_move_ignore_table
+            .sheet_1
+            .iter()
+            .find(|e| e.monsno == entry.no)
+        {
+            let egg_move_ignore_table = ignore_entry.waza.clone();
+            egg_move_table = egg_move_table
+                .into_iter()
+                .filter(|i| !egg_move_ignore_table.contains(i) || *i == 0)
+                .collect::<Vec<u16>>(); // i == 0 check just in case
+        }
+        egg_move_table.sort();
+        egg_move_table
+    } else {
+        vec![]
+    }
 }
 
 pub fn available_pokemon(version: Version, story_flag: u8, room: RoomType) -> Vec<u16> {

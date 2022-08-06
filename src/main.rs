@@ -2,7 +2,9 @@
 
 use bdsp_ug_generator::resource_util::load_string_list;
 use bdsp_ug_generator::xorshift::XorShift;
-use bdsp_ug_generator::{personal_table, run_results, Filter, Pokemon, RoomType, Version};
+use bdsp_ug_generator::{
+    available_pokemon, personal_table, run_results, Filter, Pokemon, RoomType, Version,
+};
 use clap::{ArgEnum, Parser};
 use lazy_static::lazy_static;
 use std::fmt::Write;
@@ -133,6 +135,11 @@ fn write_pokemon(pokemon: &Pokemon, string: &mut String) {
 }
 
 fn main() {
+    println!(
+        "{:?}",
+        available_pokemon(Version::BD, 6, RoomType::SpaciousCave)
+    );
+
     let cli: Cli = Cli::parse();
 
     println!("Advances: {}", cli.advances);
