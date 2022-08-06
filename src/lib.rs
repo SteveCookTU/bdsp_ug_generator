@@ -239,5 +239,9 @@ pub fn available_pokemon(version: Version, story_flag: u8, room: RoomType) -> Ve
         }
     }
 
-    available.into_iter().collect()
+    let mut available = available.into_iter().collect::<Vec<u16>>();
+
+    available.sort();
+
+    available
 }
