@@ -7,6 +7,7 @@ pub mod resource_util;
 mod run_results;
 pub mod xorshift;
 
+use std::collections::HashSet;
 pub use filter::*;
 pub use run_results::*;
 use serde::Deserialize;
@@ -174,4 +175,38 @@ pub enum RoomType {
     GlacialCavern,
     BogsunkCavern,
     TyphloCavern,
+}
+
+pub fn available_pokemon(version: Version, story_flag: u8) -> Vec<u16> {
+    let mut available = HashSet::new();
+
+    let opposite_version = match version {
+        Version::BD => Version::SP,
+        Version::SP => Version::BD,
+    };
+
+    for i in 2..13 {
+        let ug_encount_str = match i {
+            2 => UG_ENCOUNT_02,
+            3 => UG_ENCOUNT_03,
+            4 => UG_ENCOUNT_04,
+            5 => UG_ENCOUNT_05,
+            6 => UG_ENCOUNT_06,
+            7 => UG_ENCOUNT_07,
+            8 => UG_ENCOUNT_08,
+            9 => UG_ENCOUNT_09,
+            10 => UG_ENCOUNT_10,
+            11 => UG_ENCOUNT_11,
+            _ => UG_ENCOUNT_12
+        };
+
+        let ug_encount = serde_json::from_str::<UgEncountSheet>(ug_encount_str).unwrap();
+        for pokemon in ug_encount.table {
+            if pokemon.version != opposite_version as u8 && pokemon.zukan_flag <= story_flag {
+                available.insert(pokemon.monsno);
+            }
+        }
+    }
+
+    available.into_iter().collect()
 }
