@@ -163,33 +163,6 @@ pub fn run_results(
         .find(|t| t.id == room as u8)
         .unwrap()
         .clone();
-    let mut smax = rand_mark_data.smax;
-    let mut mmax = rand_mark_data.mmax;
-    let mut lmax = rand_mark_data.lmax;
-    let mut llmax = rand_mark_data.llmax;
-
-    let mut sizes =
-        Vec::with_capacity(smax as usize + mmax as usize + llmax as usize + lmax as usize);
-
-    while smax > 0 {
-        sizes.push(0);
-        smax -= 1;
-    }
-
-    while mmax > 0 {
-        sizes.push(1);
-        mmax -= 1;
-    }
-
-    while lmax > 0 {
-        sizes.push(2);
-        lmax -= 1;
-    }
-
-    while llmax > 0 {
-        sizes.push(3);
-        llmax -= 1;
-    }
 
     let egg_move_table = serde_json::from_str::<TamagoWazaTable>(TAMAGO_WAZA_TABLE).unwrap();
     let egg_move_ignore_table =
@@ -255,27 +228,8 @@ pub fn run_results(
                 }
             }
 
-            if sizes.iter().all(|s| exist_size_list.contains(s)) {
-                sizes = sizes
-                    .into_iter()
-                    .filter(|s| !exist_size_list.contains(s))
-                    .collect();
-            } else {
-                sizes = sizes
-                    .into_iter()
-                    .filter(|s| exist_size_list.contains(s))
-                    .collect();
-            }
-
-            let size = if !sizes.is_empty() {
-                let size_rand = clone.rand_range(0, sizes.len() as u32);
-                let size = sizes[size_rand as usize];
-                sizes.remove(size_rand as usize);
-                size
-            } else {
-                let size_rand = clone.rand_range(0, exist_size_list.len() as u32);
-                exist_size_list[size_rand as usize]
-            };
+            let size_rand = clone.rand_range(0, exist_size_list.len() as u32);
+            let size = exist_size_list[size_rand as usize];
 
             poke_slots.push(TypeAndSize {
                 r#type,

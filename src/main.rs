@@ -135,11 +135,6 @@ fn write_pokemon(pokemon: &Pokemon, string: &mut String) {
 }
 
 fn main() {
-    println!(
-        "{:?}",
-        available_pokemon(Version::BD, 6, RoomType::SpaciousCave)
-    );
-
     let cli: Cli = Cli::parse();
 
     println!("Advances: {}", cli.advances);

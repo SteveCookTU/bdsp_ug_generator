@@ -94,12 +94,6 @@ struct UgRandMark {
     file_name: String,
     min: u8,
     max: u8,
-    smax: u8,
-    mmax: u8,
-    lmax: u8,
-    llmax: u8,
-    #[allow(dead_code)]
-    watermax: u8,
     typerate: Vec<u16>,
 }
 
