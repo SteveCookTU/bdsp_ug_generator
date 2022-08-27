@@ -106,7 +106,7 @@ pub fn run_results(
         .filter(|e| e.version != opposite_version as u8 && e.zukan_flag <= story_flag)
         .collect::<Vec<UgEncount>>();
 
-    let mut mons_data_indexs = Vec::new();
+    let mut mons_data_indexs = Vec::with_capacity(enabled_pokemon.len() * 2);
     for encount in enabled_pokemon.iter() {
         let pokemon_data = ug_pokemon_data
             .table
@@ -221,7 +221,7 @@ pub fn run_results(
                 .filter(|ts| ts.r#type == r#type)
                 .copied()
                 .collect::<Vec<TypeAndSize>>();
-            let mut exist_size_list = Vec::new();
+            let mut exist_size_list = Vec::with_capacity(4);
             for ts in pokemon_with_type.iter() {
                 if !exist_size_list.contains(&ts.size) {
                     exist_size_list.push(ts.size);
@@ -253,7 +253,7 @@ pub fn run_results(
                 })
                 .collect::<Vec<TypeAndSize>>();
 
-            let mut filtered_list = Vec::new();
+            let mut filtered_list = Vec::with_capacity(enabled_pokemon.len());
 
             for pokemon in enabled_pokemon.iter() {
                 let pokemon_data = ug_pokemon_data
@@ -269,7 +269,7 @@ pub fn run_results(
                 }
             }
 
-            let mut poke_rates: Vec<PokeRate> = Vec::new();
+            let mut poke_rates: Vec<PokeRate> = Vec::with_capacity(filtered_list.len());
 
             for filtered in filtered_list {
                 let pokemon_data = ug_pokemon_data
