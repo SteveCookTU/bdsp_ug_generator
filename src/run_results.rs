@@ -39,7 +39,7 @@ pub fn run_results(
     room: RoomType,
     filter: Filter,
     diglett: bool,
-    statues: StatueConfig,
+    statues: &StatueConfig,
 ) -> Vec<Advance> {
     let mut results = Vec::with_capacity(advances as usize);
 

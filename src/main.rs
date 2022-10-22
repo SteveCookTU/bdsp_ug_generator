@@ -224,7 +224,7 @@ fn main() {
         cli.room.into(),
         filter,
         cli.diglett,
-        statue_config
+        &statue_config
     );
 
     let mut print = String::new();
