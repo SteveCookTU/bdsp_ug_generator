@@ -24,6 +24,12 @@ pub struct Statue {
     pub poke_type_effect: [u16; 2],
 }
 
+impl PartialEq for Statue {
+    fn eq(&self, other: &Self) -> bool {
+        self.statue_id == other.statue_id
+    }
+}
+
 #[derive(Serialize, Deserialize)]
 pub struct StatueEffectRawData {
     table: Vec<Statue>,
