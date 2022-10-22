@@ -4,7 +4,7 @@ const RAW_STATUE_DATA: &str = include_str!("../StatueEffectRawData.json");
 
 #[derive(Serialize, Deserialize, Default)]
 pub struct StatueConfig {
-    statues: Vec<Statue>,
+    pub statues: Vec<Statue>,
 }
 
 #[derive(Serialize, Deserialize, Copy, Clone)]
