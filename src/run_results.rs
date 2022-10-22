@@ -8,6 +8,7 @@ use crate::{
 };
 
 use crate::personal_info::PersonalInfo;
+use crate::statues::StatueConfig;
 use crate::xorshift::XorShift;
 
 pub struct Advance {
@@ -38,6 +39,7 @@ pub fn run_results(
     room: RoomType,
     filter: Filter,
     diglett: bool,
+    statues: StatueConfig,
 ) -> Vec<Advance> {
     let mut results = Vec::with_capacity(advances as usize);
 
@@ -133,6 +135,8 @@ pub fn run_results(
         }
     }
 
+    let type_bonuses = statues.get_bonus_rates();
+
     let mut type_rates = ug_rand_mark
         .table
         .iter()
@@ -145,7 +149,7 @@ pub fn run_results(
             if mons_data_indexs.iter().any(|ts| ts.r#type == i as i8) {
                 Some(TypeRate {
                     r#type: i as i8,
-                    rate: *rate,
+                    rate: *rate + type_bonuses[i],
                 })
             } else {
                 None
@@ -170,7 +174,7 @@ pub fn run_results(
 
     let rare_try_count = if diglett { 2 } else { 1 };
 
-    let secret_base_used_tiles = 0;
+    let secret_base_tile_bonus = statues.get_spawn_count_bonus();
     for curr_advance in 0..=advances {
         let mut spawn_count = rand_mark_data.min;
         let mut clone = rng;
@@ -189,7 +193,7 @@ pub fn run_results(
         }
 
         let min_max_rand = clone.rand_range(0, 100);
-        if 50u32.saturating_sub(secret_base_used_tiles) <= min_max_rand {
+        if 50u32.saturating_sub(secret_base_tile_bonus) <= min_max_rand {
             spawn_count = rand_mark_data.max;
         }
 

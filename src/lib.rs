@@ -5,6 +5,7 @@ pub mod personal_info_bdsp;
 pub mod personal_table;
 pub mod resource_util;
 mod run_results;
+pub mod statues;
 pub mod xorshift;
 
 pub use filter::*;

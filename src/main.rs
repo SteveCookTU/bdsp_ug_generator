@@ -7,7 +7,10 @@ use bdsp_ug_generator::{
 };
 use clap::{ArgEnum, Parser};
 use lazy_static::lazy_static;
-use std::fmt::Write;
+use std::fmt::Write as fmt_write;
+use std::fs::{File, OpenOptions};
+use std::io::{Read, Write};
+use bdsp_ug_generator::statues::{get_statue_data, StatueConfig};
 
 #[derive(Parser)]
 struct Cli {
@@ -137,6 +140,17 @@ fn write_pokemon(pokemon: &Pokemon, string: &mut String) {
 fn main() {
     let cli: Cli = Cli::parse();
 
+    let mut statue_config;
+
+    let file_open = File::open("statue_config.json");
+    if let Ok(mut file) = file_open {
+        let mut string = String::new();
+        file.read_to_string(&mut string).unwrap();
+        statue_config = serde_json::from_str::<StatueConfig>(&string).unwrap();
+    } else {
+        statue_config = StatueConfig::default();
+    }
+
     println!("Advances: {}", cli.advances);
     let s0 = cli.s0.trim_start_matches("0x");
     let s0 = u32::from_str_radix(s0, 16).expect("Failed to parse s0 to u32");
@@ -210,6 +224,7 @@ fn main() {
         cli.room.into(),
         filter,
         cli.diglett,
+        statue_config
     );
 
     let mut print = String::new();

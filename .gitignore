@@ -2,3 +2,4 @@
 .idea
 *.iml
 /bdsp_ug_generator.exe
+/statue_config.json
