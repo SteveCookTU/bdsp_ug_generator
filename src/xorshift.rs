@@ -64,12 +64,12 @@ impl XorShift {
 
         let mut i = 0;
         while advances != 0 {
-            if advances & 1 == 0 {
+            if advances & 1 == 1 {
                 let mut jump: [u32; 4] = [0; 4];
                 for j in (0..=1).rev() {
                     let mut val = JUMP_TABLE[i][j];
                     for _ in 0..64 {
-                        if val & 1 == 0 {
+                        if val & 1 == 1 {
                             jump[0] = jump[0].bitxor(&self.state[0]);
                             jump[1] = jump[1].bitxor(&self.state[1]);
                             jump[2] = jump[2].bitxor(&self.state[2]);
