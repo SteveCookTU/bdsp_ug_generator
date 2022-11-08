@@ -1,6 +1,7 @@
 #![allow(unused)]
 
 use bdsp_ug_generator::resource_util::load_string_list;
+use bdsp_ug_generator::statues::{get_statue_data, StatueConfig};
 use bdsp_ug_generator::xorshift::XorShift;
 use bdsp_ug_generator::{
     available_pokemon, personal_table, run_results, Filter, Pokemon, RoomType, Version,
@@ -10,7 +11,6 @@ use lazy_static::lazy_static;
 use std::fmt::Write as fmt_write;
 use std::fs::{File, OpenOptions};
 use std::io::{Read, Write};
-use bdsp_ug_generator::statues::{get_statue_data, StatueConfig};
 
 #[derive(Parser)]
 struct Cli {
@@ -195,7 +195,7 @@ fn main() {
                 if i.is_empty() {
                     None
                 } else {
-                    Some(i.parse::<u8>().expect("Failed to parse nature to u8"))
+                    Some(i.parse().expect("Failed to parse nature to u8"))
                 }
             })
             .collect::<Vec<u8>>()
@@ -224,7 +224,7 @@ fn main() {
         cli.room.into(),
         filter,
         cli.diglett,
-        &statue_config
+        &statue_config,
     );
 
     let mut print = String::new();
